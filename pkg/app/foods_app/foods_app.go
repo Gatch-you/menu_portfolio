@@ -59,10 +59,6 @@ func FetchFoodByKey(w http.ResponseWriter, r *http.Request) {
 
 // 新しい食品の項目追加
 // ↓実行コマンド
-// curl -X POST -H "Content-Type: application/json" -d
-// '{"id": value, "name": "value", "quantity": value, "unit": "value", "expiration_date": "XXXX-YY-ZZT00:00:00Z", "type": "value"}'
-// http://localhost:8080/api/user/create
-
 // curl -X POST -H "Content-Type: application/json" -d '{"id": 2, "name": "キャベツ", "quantity": 0.5, "unit": "個", "expiration_date": "2023-04-21T00:00:00Z", "type": "野菜"}' http://localhost:8080/menu_proposer/insert_food
 func InsertFoods(w http.ResponseWriter, r *http.Request) {
 	db := db.Connect()
@@ -102,10 +98,7 @@ func InsertFoods(w http.ResponseWriter, r *http.Request) {
 
 // 食品の数量、個数の変化をこのコードにて処理する。0の量もこのデータにて扱う
 
-// curl -X PUT -H "Content-Type: application/json" -d
-// '{"name": "キャベツ", "quantity": 0.3, "unit": " 個", "expiration_date": "2023-04-21T00:00:00Z", "type": "野菜"}'
-
-// http://localhost:8080/menu_proposer/update_food/(id)
+// curl -X PUT -H "Content-Type: application/json" -d '{"name": "キャベツ", "quantity": 0.3, "unit": " 個", "expiration_date": "2023-05-02T00:00:00Z", "type": "野菜"}' http://localhost:8080/menu_proposer/update_food/2
 func UpdateFoods(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/menu_proposer/update_food/")
 
@@ -151,4 +144,57 @@ func DeleteFoods(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Printf("Food which you select has been deleted")
 
+}
+
+func FetchExpirationFood(w http.ResponseWriter, r *http.Request) {
+	db := db.Connect()
+	defer db.Close()
+
+	loc, err := time.LoadLocation("Asia/Tokyo")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	for {
+		now := time.Now().In(loc)
+
+		// threeDaysLater := now.AddDate(0, 0, 3)
+
+		fmt.Println(now)
+
+		if now == time.Date(now.Year(), now.Month(), now.Day(), 22, now.Minute(), now.Second(), now.Nanosecond(), loc) {
+
+			rows, err := db.Query("SELECT name, quantity, unit, expiration_date FROM foods WHERE expiration_date >= DATE(NOW()) AND expiration_date <= DATE_ADD(DATE(NOW()), INTERVAL 5 DAY)")
+			// rows, err := db.Query("SELECT * FROM foods")
+			if err != nil {
+				log.Fatal(err.Error())
+			}
+
+			expirationFoodArgs := make([]Food, 0)
+			for rows.Next() {
+				var food Food
+				err = rows.Scan(&food.Name, &food.Quantity, &food.Unit, &food.ExpirationDate)
+				// err = rows.Scan(&food.ID, &food.Name, &food.Quantity, &food.Unit, &food.ExpirationDate, &food.Type)
+				if err != nil {
+					log.Fatal(err.Error())
+				}
+
+				expirationFoodArgs = append(expirationFoodArgs, food)
+				// fmt.Println(expirationFoodArgs)
+				fmt.Println(expirationFoodArgs)
+			}
+
+			v, err := json.Marshal(expirationFoodArgs)
+			if err != nil {
+				log.Fatal(err.Error())
+			}
+			fmt.Println("Hello, Foods!")
+
+			w.Write([]byte("Show the Foods whitch expiration date having been closed in 3 days\n"))
+			w.Write([]byte(v))
+
+		}
+
+		time.Sleep(time.Second * 1)
+	}
 }
