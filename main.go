@@ -28,7 +28,7 @@ func main() {
 	http.HandleFunc("/menu_proposer/recipe_food/updata_food_strage/", recipe_food_app.UpdateFoodStrage)
 	http.HandleFunc("/menu_proposer/recipe_food/update_using_food_quantity", recipe_food_app.UpdateUsingFoodQuantity)
 
-	go http.HandleFunc("/menu_proposer/foods_expiration", foods_app.FetchExpirationFood)
+	go recipe_food_app.FetchExpirationFood(nil, nil)
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 

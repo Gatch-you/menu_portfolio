@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"menu_proposer/pkg/app/foods_app"
 	"menu_proposer/pkg/db"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type Recipe_food struct {
@@ -99,4 +101,68 @@ func UpdateUsingFoodQuantity(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Println("Hey, you alter the amount of ingridients in recipe. OK, I accept")
+}
+
+// 定時になったら、賞味期限が指定した日時以内の食品の一覧を表示し、
+// その食品を使って作ることができるレシピと、その食材の使用量を出力する関数
+func FetchExpirationFood(w http.ResponseWriter, r *http.Request) []Recipe_food {
+	db := db.Connect()
+	defer db.Close()
+
+	loc, err := time.LoadLocation("Asia/Tokyo")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	for {
+		now := time.Now().In(loc)
+
+		fmt.Println(now)
+
+		if now == time.Date(now.Year(), now.Month(), now.Day(), 18, now.Minute(), now.Second(), now.Nanosecond(), loc) {
+
+			foodRows, err := db.Query("SELECT name, quantity, unit, expiration_date FROM foods WHERE expiration_date >= DATE(NOW()) AND expiration_date <= DATE_ADD(DATE(NOW()), INTERVAL 5 DAY)")
+			if err != nil {
+				log.Fatal(err.Error())
+			}
+
+			expirationFoodArgs := make([]foods_app.Food, 0)
+			for foodRows.Next() {
+				var food foods_app.Food
+				err = foodRows.Scan(&food.Name, &food.Quantity, &food.Unit, &food.ExpirationDate)
+				if err != nil {
+					log.Fatal(err.Error())
+				}
+				expirationFoodArgs = append(expirationFoodArgs, food)
+			}
+
+			recipeRows, err := db.Query("SELECT r.name, f.name, rf.use_amount FROM recipe_food rf JOIN foods f ON rf.food_id = f.id JOIN recipes r ON rf.recipe_id = r.id WHERE f.expiration_date >= DATE(NOW()) AND f.expiration_date <= DATE_ADD(DATE(NOW()), INTERVAL 5 DAY)")
+			if err != nil {
+				log.Fatal(err.Error())
+			}
+
+			recipeWithExpirationFoodsArgs := make([]Recipe_food, 0)
+			for recipeRows.Next() {
+				var recipe_food Recipe_food
+				err = recipeRows.Scan(&recipe_food.RecipeName, &recipe_food.FoodName, &recipe_food.UseAmount)
+				if err != nil {
+					log.Fatal(err.Error())
+				}
+				recipeWithExpirationFoodsArgs = append(recipeWithExpirationFoodsArgs, recipe_food)
+			}
+
+			fmt.Println("Hello, Foods!")
+			fmt.Println(expirationFoodArgs)
+			fmt.Println(recipeWithExpirationFoodsArgs)
+			// v, err := json.Marshal(expirationFoodArgs)
+			// if err != nil {
+			// 	log.Fatal(err.Error())
+			// }
+			// fmt.Println(v)
+
+			// w.Write([]byte("Show the Foods whitch expiration date having been closed in 3 days\n"))
+			// w.Write([]byte(v))
+		}
+		time.Sleep(time.Second * 5)
+	}
 }
