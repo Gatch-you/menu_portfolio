@@ -1,10 +1,10 @@
 package recipes_app
 
 import (
+	db "backend/pkg/db"
 	"encoding/json"
 	"fmt"
 	"log"
-	db "menu_proposer/pkg/db"
 	"net/http"
 	"strings"
 )
@@ -54,7 +54,7 @@ func FetchRecipeByKey(w http.ResponseWriter, r *http.Request) {
 }
 
 // 新しいレシピの項目追加
-// curl -X POST -H "Content-Type: application/json" -d '{"id": 2, "name": "カレー", "description": "日 本家庭の一般的料理。", "image": null, "making_method": "hoge"}' http://localhost:8080/menu_proposer/insert_recipe
+// curl -X POST -H "Content-Type: application/json" -d '{"id": 2, "name": "カレー", "description": "日 本家庭の一般的料理。", "image": null, "making_method": "hoge"}' http://localhost:8080/backend/insert_recipe
 func InsertFood(w http.ResponseWriter, r *http.Request) {
 	db := db.Connect()
 	defer db.Close()
@@ -86,9 +86,9 @@ func InsertFood(w http.ResponseWriter, r *http.Request) {
 }
 
 // レシピの変更をこのコードにて処理する。
-// curl -X PUT -H "Content-Type: application/json" -d '{"id": n, "name": "hoge", "description": "hoge", "image": null, "making_method": "hoge"}' http://localhost:8080/menu_proposer/update_recipe/(id)
+// curl -X PUT -H "Content-Type: application/json" -d '{"id": n, "name": "hoge", "description": "hoge", "image": null, "making_method": "hoge"}' http://localhost:8080/backend/update_recipe/(id)
 func UpdateRecipe(w http.ResponseWriter, r *http.Request) {
-	id := strings.TrimPrefix(r.URL.Path, "/menu_proposer/update_recipe/")
+	id := strings.TrimPrefix(r.URL.Path, "/backend/update_recipe/")
 
 	db := db.Connect()
 	defer db.Close()
@@ -113,9 +113,9 @@ func UpdateRecipe(w http.ResponseWriter, r *http.Request) {
 }
 
 // レシピのデータベースのフィールドそのものを削除する。再びその食品を使うには再度Insertrecipeを叩かなければならなくなる。
-// curl -X DELETE localhost:8080/menu_proposer/delete_recipe/(id)
+// curl -X DELETE localhost:8080/backend/delete_recipe/(id)
 func DeleteRecipe(w http.ResponseWriter, r *http.Request) {
-	id := strings.TrimPrefix(r.URL.Path, "/menu_proposer/delete_recipe/")
+	id := strings.TrimPrefix(r.URL.Path, "/backend/delete_recipe/")
 
 	db := db.Connect()
 	defer db.Close()

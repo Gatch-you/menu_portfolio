@@ -1,13 +1,16 @@
 package foods_app
 
 import (
+	db "backend/pkg/db"
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
-	db "menu_proposer/pkg/db"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/olivere/elastic/v7"
 )
 
 // 食品の構造体json形式のデータ変換等も行う
@@ -37,9 +40,7 @@ func FetchFoods(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatal(err.Error())
 		}
-		// z := food.ExpirationDate
 		foodArgs = append(foodArgs, food)
-		// fmt.Println(z)
 	}
 
 	v, err := json.Marshal(foodArgs)
@@ -52,14 +53,79 @@ func FetchFoods(w http.ResponseWriter, r *http.Request) {
 }
 
 // 食品の検索に使うが、他の検索アルゴリズムに置き換わる可能性大
-func FetchFoodByKey(w http.ResponseWriter, r *http.Request) {
+func SearchFoods(w http.ResponseWriter, r *http.Request) {
+
+	elasticURL := "http://localhost:9200"
+	elasticUser := "root"
+	elasticPass := "hoge"
+
+	esClient, err := elastic.NewClient(
+		elastic.SetURL(elasticURL),
+		elastic.SetBasicAuth(elasticUser, elasticPass),
+	)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
 	db := db.Connect()
 	defer db.Close()
+
+	rows, err := db.Query("SELECT * FROM foods")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	for rows.Next() {
+		var food Food
+		err = rows.Scan(&food.ID, &food.Name, &food.Quantity, &food.Unit, &food.ExpirationDate, &food.Type)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+
+		//Elasticsearchへデータを保存
+		_, err = esClient.Index().
+			Index("foods").
+			BodyJson(food).
+			Do(context.Background())
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+	}
+
+	query := r.URL.Query().Get("name")
+	// 間違ってるかも
+
+	searchResult, err := esClient.Search().
+		Index("foods").
+		Query(elastic.NewMatchQuery("name", query)).
+		From(0).Size(10).
+		Do(context.Background())
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	//elasticServer上からヒットした検索結果を[]Foodのスライスに格納押したのちにfoodsへとappendしている。
+	foods := make([]Food, 0)
+	for _, hit := range searchResult.Hits.Hits {
+		var food Food
+		err := json.Unmarshal(hit.Source, &food)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		foods = append(foods, food)
+	}
+	v, err := json.Marshal(foods)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(v)
 }
 
 // 新しい食品の項目追加
 // ↓実行コマンド
-// curl -X POST -H "Content-Type: application/json" -d '{"id": 2, "name": "キャベツ", "quantity": 0.5, "unit": "個", "expiration_date": "2023-04-21T00:00:00Z", "type": "野菜"}' http://localhost:8080/menu_proposer/insert_food
+// curl -X POST -H "Content-Type: application/json" -d '{"id": 2, "name": "キャベツ", "quantity": 0.5, "unit": "個", "expiration_date": "2023-04-21T00:00:00Z", "type": "野菜"}' http://localhost:8080/backend/insert_food
 func InsertFoods(w http.ResponseWriter, r *http.Request) {
 	db := db.Connect()
 	defer db.Close()
@@ -98,9 +164,9 @@ func InsertFoods(w http.ResponseWriter, r *http.Request) {
 
 // 食品の数量、個数の変化をこのコードにて処理する。0の量もこのデータにて扱う
 
-// curl -X PUT -H "Content-Type: application/json" -d '{"name": "キャベツ", "quantity": 0.3, "unit": " 個", "expiration_date": "2023-05-02T00:00:00Z", "type": "野菜"}' http://localhost:8080/menu_proposer/update_food/2
+// curl -X PUT -H "Content-Type: application/json" -d '{"name": "キャベツ", "quantity": 0.3, "unit": " 個", "expiration_date": "2023-05-02T00:00:00Z", "type": "野菜"}' http://localhost:8080/backend/update_food/2
 func UpdateFoods(w http.ResponseWriter, r *http.Request) {
-	id := strings.TrimPrefix(r.URL.Path, "/menu_proposer/update_food/")
+	id := strings.TrimPrefix(r.URL.Path, "/backend/update_food/")
 
 	db := db.Connect()
 	defer db.Close()
@@ -111,12 +177,12 @@ func UpdateFoods(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err.Error())
 	}
 
-	updt, err := db.Prepare("UPDATE foods SET name = ?, quantity = ?, unit = ?, expiration_date = ?, type = ? WHERE id = ?")
+	update, err := db.Prepare("UPDATE foods SET name = ?, quantity = ?, unit = ?, expiration_date = ?, type = ? WHERE id = ?")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	_, err = updt.Exec(food.Name, food.Quantity, food.Unit, food.ExpirationDate, food.Type, id)
+	_, err = update.Exec(food.Name, food.Quantity, food.Unit, food.ExpirationDate, food.Type, id)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -125,19 +191,19 @@ func UpdateFoods(w http.ResponseWriter, r *http.Request) {
 }
 
 // 食品のデータベースのフィールドそのものを削除する。再びその食品を使うには再度InsertFoodsを叩かなければならなくなる。
-// curl -X DELETE localhost:8080/menu_proposer/delete_food/(id)
+// curl -X DELETE localhost:8080/backend/delete_food/(id)
 func DeleteFoods(w http.ResponseWriter, r *http.Request) {
-	id := strings.TrimPrefix(r.URL.Path, "/menu_proposer/delete_food/")
+	id := strings.TrimPrefix(r.URL.Path, "/backend/delete_food/")
 
 	db := db.Connect()
 	defer db.Close()
 
-	delt, err := db.Prepare("DELETE FROM foods WHERE id = ?")
+	delete, err := db.Prepare("DELETE FROM foods WHERE id = ?")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	_, err = delt.Exec(id)
+	_, err = delete.Exec(id)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

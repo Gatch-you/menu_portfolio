@@ -1,11 +1,11 @@
 package recipe_food_app
 
 import (
+	"backend/pkg/app/foods_app"
+	"backend/pkg/db"
 	"encoding/json"
 	"fmt"
 	"log"
-	"menu_proposer/pkg/app/foods_app"
-	"menu_proposer/pkg/db"
 	"net/http"
 	"strings"
 	"time"
@@ -23,9 +23,8 @@ type Recipe_food struct {
 }
 
 // 使用する食材の名前と量の情報を保持しているレシピの一覧表示。
-// curl http://localhost:8080/menu_proposer/recipe_food
+// curl http://localhost:8080/backend/recipe_food
 func FetchRecipesWithFood(w http.ResponseWriter, r *http.Request) {
-
 	db := db.Connect()
 	defer db.Close()
 
@@ -49,38 +48,36 @@ func FetchRecipesWithFood(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err.Error())
 	}
 
-	w.Write([]byte("Show the recipe with ingridients.\n"))
+	w.Write([]byte("Show the recipe with foods.\n"))
 	w.Write([]byte(v))
 }
 
 // 料理の作成後、使用した食材分foodsから引く機能
-// curl -X PUT http://localhost:8080/menu_proposer/recipe_food/updata_quantity/1
-func UpdateFoodStrage(w http.ResponseWriter, r *http.Request) {
-	id := strings.TrimPrefix(r.URL.Path, "/menu_proposer/recipe_food/updata_food_strage/")
+// curl -X PUT http://localhost:8080/backend/recipe_food/updata_quantity/1
+func UpdateFoodStorage(w http.ResponseWriter, r *http.Request) {
+	id := strings.TrimPrefix(r.URL.Path, "/backend/recipe_food/update_food_storage/")
 
 	db := db.Connect()
 	defer db.Close()
 
-	updt, err := db.Prepare("UPDATE foods AS f INNER JOIN recipe_food AS rf ON f.id = rf.food_id SET f.quantity = f.quantity - rf.use_amount WHERE rf.recipe_id = ? AND f.quantity >= rf.use_amount")
+	update, err := db.Prepare("UPDATE foods AS f INNER JOIN recipe_food AS rf ON f.id = rf.food_id SET f.quantity = f.quantity - rf.use_amount WHERE rf.recipe_id = ? AND f.quantity >= rf.use_amount")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	_, err = updt.Exec(id)
+	_, err = update.Exec(id)
 	if err != nil {
 		log.Fatal(err.Error())
-		log.Println("Ingridients is out of stock!")
+		log.Println("Ingredients is out of stock!")
 	}
 
-	fmt.Printf("You've finished cooking! I've finished updating list you use ingridient. Nice Cooking!")
+	fmt.Printf("You've finished cooking! I've finished updating list you use ingredient. Nice Cooking!")
 
 }
 
 // レシピにて使用する食材の量を変更する処理
-// curl -X PUT -H "Content-Type: application/json" -d '{"recipe_id": 2, "food_id": 3, "use_amount": 3}' http://localhost:8080/menu_proposer/recipe_food/update_using_food_quantity
+// curl -X PUT -H "Content-Type: application/json" -d '{"recipe_id": 2, "food_id": 3, "use_amount": 3}' http://localhost:8080/backend/recipe_food/update_using_food_quantity
 func UpdateUsingFoodQuantity(w http.ResponseWriter, r *http.Request) {
-	// recipe_id := strings.TrimPrefix(r.URL.Path, "/menu_proposer/recipe_food/update_using_food_quantity/")
-
 	db := db.Connect()
 	defer db.Close()
 
@@ -90,17 +87,17 @@ func UpdateUsingFoodQuantity(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err.Error())
 	}
 
-	updt, err := db.Prepare("UPDATE recipe_food SET use_amount = ? WHERE recipe_id = ? AND food_id = ?")
+	update, err := db.Prepare("UPDATE recipe_food SET use_amount = ? WHERE recipe_id = ? AND food_id = ?")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	_, err = updt.Exec(recipe_food.UseAmount, recipe_food.RecipeId, recipe_food.FoodId)
+	_, err = update.Exec(recipe_food.UseAmount, recipe_food.RecipeId, recipe_food.FoodId)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	fmt.Println("Hey, you alter the amount of ingridients in recipe. OK, I accept")
+	fmt.Println("Hey, you alter the amount of ingredients in recipe. OK, I accept")
 }
 
 // 定時になったら、賞味期限が指定した日時以内の食品の一覧を表示し、
@@ -119,7 +116,7 @@ func FetchExpirationFood(w http.ResponseWriter, r *http.Request) []Recipe_food {
 
 		fmt.Println(now)
 
-		if now == time.Date(now.Year(), now.Month(), now.Day(), 18, now.Minute(), now.Second(), now.Nanosecond(), loc) {
+		if now == time.Date(now.Year(), now.Month(), now.Day(), 15, now.Minute(), now.Second(), now.Nanosecond(), loc) {
 
 			foodRows, err := db.Query("SELECT name, quantity, unit, expiration_date FROM foods WHERE expiration_date >= DATE(NOW()) AND expiration_date <= DATE_ADD(DATE(NOW()), INTERVAL 5 DAY)")
 			if err != nil {
@@ -154,15 +151,18 @@ func FetchExpirationFood(w http.ResponseWriter, r *http.Request) []Recipe_food {
 			fmt.Println("Hello, Foods!")
 			fmt.Println(expirationFoodArgs)
 			fmt.Println(recipeWithExpirationFoodsArgs)
+
+			// jsonへと変換
 			// v, err := json.Marshal(expirationFoodArgs)
 			// if err != nil {
 			// 	log.Fatal(err.Error())
 			// }
 			// fmt.Println(v)
 
-			// w.Write([]byte("Show the Foods whitch expiration date having been closed in 3 days\n"))
+			// goroutineで並列処理を実装するとmainから渡された関数の引数nilとwがぶつかってエラーが出たので、今はw.Writeはつかわない。
+			// w.Write([]byte("Show the Foods which expiration date having been closed in 3 days\n"))
 			// w.Write([]byte(v))
 		}
-		time.Sleep(time.Second * 5)
+		time.Sleep(time.Hour * 5)
 	}
 }
