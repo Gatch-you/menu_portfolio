@@ -80,6 +80,7 @@ func InsertFood(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err.Error())
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte("Insert a New Recipe\n"))
 	w.Write(bytes)
 
@@ -109,6 +110,7 @@ func UpdateRecipe(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err.Error())
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(w, "%s has been updated.", recipe.Name)
 }
 

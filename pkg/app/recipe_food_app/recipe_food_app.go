@@ -97,6 +97,7 @@ func UpdateUsingFoodQuantity(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err.Error())
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	fmt.Println("Hey, you alter the amount of ingredients in recipe. OK, I accept")
 }
 

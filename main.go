@@ -32,6 +32,6 @@ func main() {
 	//goroutineで定時に発火させる
 	go recipe_food_app.FetchExpirationFood(nil, nil)
 
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	http.ListenAndServe(":8080", nil)
 
 }

@@ -43,13 +43,11 @@ func FetchFoods(w http.ResponseWriter, r *http.Request) {
 		foodArgs = append(foodArgs, food)
 	}
 
-	v, err := json.Marshal(foodArgs)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
 
-	w.Write([]byte("Show the Foods\n"))
-	w.Write([]byte(v))
+	json.NewEncoder(w).Encode(foodArgs)
 }
 
 // 食品の検索に使うが、他の検索アルゴリズムに置き換わる可能性大
@@ -157,6 +155,7 @@ func InsertFoods(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err.Error())
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte("Insert New Food\n"))
 	w.Write(bytes)
 
@@ -187,6 +186,7 @@ func UpdateFoods(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err.Error())
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(w, "%s has been updated and quantity is altered.", food.Name)
 }
 
