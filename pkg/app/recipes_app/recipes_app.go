@@ -38,13 +38,11 @@ func FetchRecipes(w http.ResponseWriter, r *http.Request) {
 		recipeArgs = append(recipeArgs, recipe)
 	}
 
-	v, err := json.Marshal(recipeArgs)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
 
-	w.Write([]byte("Show the recipes\n"))
-	w.Write([]byte(v))
+	json.NewEncoder(w).Encode(recipeArgs)
 }
 
 // レシピの検索に使うが、他の検索アルゴリズムに置き換わる可能性大
