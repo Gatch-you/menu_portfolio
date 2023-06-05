@@ -79,6 +79,10 @@ func InsertFood(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+
 	w.Write([]byte("Insert a New Recipe\n"))
 	w.Write(bytes)
 
@@ -109,6 +113,10 @@ func UpdateRecipe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+
 	fmt.Fprintf(w, "%s has been updated.", recipe.Name)
 }
 
@@ -129,6 +137,10 @@ func DeleteRecipe(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
 
 	fmt.Printf("Recipe which you select has been deleted")
 }

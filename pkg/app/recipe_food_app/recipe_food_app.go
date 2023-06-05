@@ -43,13 +43,18 @@ func FetchRecipesWithFood(w http.ResponseWriter, r *http.Request) {
 		rfArgs = append(rfArgs, recipe_food)
 	}
 
-	v, err := json.Marshal(rfArgs)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+	// v, err := json.Marshal(rfArgs)
+	// if err != nil {
+	// 	log.Fatal(err.Error())
+	// }
 
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
 	w.Write([]byte("Show the recipe with foods.\n"))
-	w.Write([]byte(v))
+
+	json.NewEncoder(w).Encode(rfArgs)
+
 }
 
 // 料理の作成後、使用した食材分foodsから引く機能
@@ -70,6 +75,11 @@ func UpdateFoodStorage(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err.Error())
 		log.Println("Ingredients is out of stock!")
 	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
 
 	fmt.Printf("You've finished cooking! I've finished updating list you use ingredient. Nice Cooking!")
 
@@ -98,6 +108,10 @@ func UpdateUsingFoodQuantity(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+
 	fmt.Println("Hey, you alter the amount of ingredients in recipe. OK, I accept")
 }
 

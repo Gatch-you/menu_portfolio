@@ -118,12 +118,15 @@ func SearchFoods(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Methods", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+
 	w.Write(v)
 }
 
 // 新しい食品の項目追加
 // ↓実行コマンド
-// curl -X POST -H "Content-Type: application/json" -d '{"id": 2, "name": "キャベツ", "quantity": 0.5, "unit": "個", "expiration_date": "2023-04-21T00:00:00Z", "type": "野菜"}' http://localhost:8080/backend/insert_food
+// curl -X POST -d '{"name": "豚肉", "quantity": 250, "unit": "g", "expiration_date": "2023-06-10T00:00:00Z", "type": "精肉"}' http://localhost:8080/backend/insert_food
 func InsertFoods(w http.ResponseWriter, r *http.Request) {
 	db := db.Connect()
 	defer db.Close()
@@ -150,14 +153,13 @@ func InsertFoods(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err.Error())
 	}
 
-	bytes, err := json.Marshal(food)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte("Insert New Food\n"))
-	w.Write(bytes)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(food)
 
 }
 
@@ -187,6 +189,10 @@ func UpdateFoods(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+
 	fmt.Fprintf(w, "%s has been updated and quantity is altered.", food.Name)
 }
 
@@ -207,6 +213,10 @@ func DeleteFoods(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
 
 	fmt.Printf("Food which you select has been deleted")
 
