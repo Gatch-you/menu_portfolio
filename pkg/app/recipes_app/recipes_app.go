@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 )
 
 // レシピの構造体json形式のデータ変換等も行う
@@ -52,8 +51,8 @@ func FetchRecipeByKey(w http.ResponseWriter, r *http.Request) {
 }
 
 // 新しいレシピの項目追加
-// curl -X POST -H "Content-Type: application/json" -d '{"id": 2, "name": "カレー", "description": "日 本家庭の一般的料理。", "image": null, "making_method": "hoge"}' http://localhost:8080/backend/insert_recipe
-func InsertFood(w http.ResponseWriter, r *http.Request) {
+// curl -X POST -d '{"id": 2, "name": "カレー", "description": "日 本家庭の一般的料理。", "image": null, "making_method": "hoge"}' http://localhost:8080/backend/insert_recipe
+func InsertRecipe(w http.ResponseWriter, r *http.Request) {
 	db := db.Connect()
 	defer db.Close()
 
@@ -72,27 +71,23 @@ func InsertFood(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-
-	bytes, err := json.Marshal(recipe)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+	// bytes, err := json.Marshal(recipe)
+	// if err != nil {
+	// 	log.Fatal(err.Error())
+	// }
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
 
-	w.Write([]byte("Insert a New Recipe\n"))
-	w.Write(bytes)
-
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(recipe)
 }
 
 // レシピの変更をこのコードにて処理する。
-// curl -X PUT -H "Content-Type: application/json" -d '{"id": n, "name": "hoge", "description": "hoge", "image": null, "making_method": "hoge"}' http://localhost:8080/backend/update_recipe/(id)
+// curl -X PUT -H "Content-Type: application/json" -d '{"id": n, "name": "hoge", "description": "hoge", "image": null, "making_method": "hoge"}' http://localhost:8080/backend/update_recipe
 func UpdateRecipe(w http.ResponseWriter, r *http.Request) {
-	id := strings.TrimPrefix(r.URL.Path, "/backend/update_recipe/")
-
 	db := db.Connect()
 	defer db.Close()
 
@@ -102,12 +97,12 @@ func UpdateRecipe(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err.Error())
 	}
 
-	update, err := db.Prepare("UPDATE recipes SET name = ?, description = ?, image = ?, making_method = ? WHERE id = ?")
+	update, err := db.Prepare("UPDATE recipes SET id = ?, name = ?, description = ?, image = ?, making_method = ? WHERE id = ?")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	_, err = update.Exec(recipe.Name, recipe.Description, recipe.Image, recipe.Making_method, id)
+	_, err = update.Exec(recipe.ID, recipe.Name, recipe.Description, recipe.Image, recipe.Making_method, recipe.ID)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -123,17 +118,21 @@ func UpdateRecipe(w http.ResponseWriter, r *http.Request) {
 // レシピのデータベースのフィールドそのものを削除する。再びその食品を使うには再度Insertrecipeを叩かなければならなくなる。
 // curl -X DELETE localhost:8080/backend/delete_recipe/(id)
 func DeleteRecipe(w http.ResponseWriter, r *http.Request) {
-	id := strings.TrimPrefix(r.URL.Path, "/backend/delete_recipe/")
-
 	db := db.Connect()
 	defer db.Close()
 
-	delt, err := db.Prepare("DELETE FROM recipes WHERE name = ?")
+	var recipe Recipe
+	err := json.NewDecoder(r.Body).Decode(&recipe)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	_, err = delt.Exec(id)
+	delt, err := db.Prepare("DELETE FROM recipes WHERE id = ?")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	_, err = delt.Exec(recipe.ID)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -142,5 +141,6 @@ func DeleteRecipe(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Methods", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
 
-	fmt.Printf("Recipe which you select has been deleted")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(recipe)
 }

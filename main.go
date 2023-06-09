@@ -14,15 +14,15 @@ func main() {
 	//foods_appのリクエスト処理
 	http.HandleFunc("/backend/foods", foods_app.FetchFoods)
 	http.HandleFunc("/backend/insert_food", foods_app.InsertFoods)
-	http.HandleFunc("/backend/delete_food/", foods_app.DeleteFoods)
-	http.HandleFunc("/backend/update_food/", foods_app.UpdateFoods)
+	http.HandleFunc("/backend/delete_food", foods_app.DeleteFoods)
+	http.HandleFunc("/backend/update_food", foods_app.UpdateFoods)
 	http.HandleFunc("/backend/search_foods/", foods_app.SearchFoods)
 
 	//recipes_appのリクエスト
 	http.HandleFunc("/backend/recipes", recipes_app.FetchRecipes)
-	http.HandleFunc("/backend/insert_recipe", recipes_app.InsertFood)
-	http.HandleFunc("/backend/update_recipe/", recipes_app.UpdateRecipe)
-	http.HandleFunc("/backend/delete_recipe/", recipes_app.DeleteRecipe)
+	http.HandleFunc("/backend/insert_recipe", recipes_app.InsertRecipe)
+	http.HandleFunc("/backend/update_recipe", recipes_app.UpdateRecipe)
+	http.HandleFunc("/backend/delete_recipe", recipes_app.DeleteRecipe)
 
 	//recipe_foodのリクエスト
 	http.HandleFunc("/backend/recipe_food", recipe_food_app.FetchRecipesWithFood)

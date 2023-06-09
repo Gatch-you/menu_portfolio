@@ -43,11 +43,6 @@ func FetchRecipesWithFood(w http.ResponseWriter, r *http.Request) {
 		rfArgs = append(rfArgs, recipe_food)
 	}
 
-	// v, err := json.Marshal(rfArgs)
-	// if err != nil {
-	// 	log.Fatal(err.Error())
-	// }
-
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "*")

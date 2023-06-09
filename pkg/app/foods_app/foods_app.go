@@ -4,10 +4,8 @@ import (
 	db "backend/pkg/db"
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/olivere/elastic/v7"
@@ -155,8 +153,8 @@ func InsertFoods(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "POST")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Methods", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(food)
@@ -165,9 +163,40 @@ func InsertFoods(w http.ResponseWriter, r *http.Request) {
 
 // 食品の数量、個数の変化をこのコードにて処理する。0の量もこのデータにて扱う
 
-// curl -X PUT -H "Content-Type: application/json" -d '{"name": "キャベツ", "quantity": 0.3, "unit": " 個", "expiration_date": "2023-05-02T00:00:00Z", "type": "野菜"}' http://localhost:8080/backend/update_food/2
+// curl -X PUT -H "Content-Type: application/json" -d '{"name": "キャベツ", "quantity": 0.3, "unit": " 個", "expiration_date": "2023-05-02T00:00:00Z", "type": "野菜"}' http://localhost:8080/backend/update_food
 func UpdateFoods(w http.ResponseWriter, r *http.Request) {
-	id := strings.TrimPrefix(r.URL.Path, "/backend/update_food/")
+	db := db.Connect()
+	defer db.Close()
+
+	var food Food
+	err := json.NewDecoder(r.Body).Decode(&food)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	update, err := db.Prepare("UPDATE foods SET id = ?, name = ?, quantity = ?, unit = ?, expiration_date = ?, type = ? WHERE id = ?")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	_, err = update.Exec(food.ID, food.Name, food.Quantity, food.Unit, food.ExpirationDate, food.Type, food.ID)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(food)
+}
+
+// 食品のデータベースのフィールドそのものを削除する。再びその食品を使うには再度InsertFoodsを叩かなければならなくなる。
+// curl -X DELETE localhost:8080/backend/delete_food/(id)
+func DeleteFoods(w http.ResponseWriter, r *http.Request) {
+	// id := strings.TrimPrefix(r.URL.Path, "/backend/delete_food/")
 
 	db := db.Connect()
 	defer db.Close()
@@ -178,38 +207,12 @@ func UpdateFoods(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err.Error())
 	}
 
-	update, err := db.Prepare("UPDATE foods SET name = ?, quantity = ?, unit = ?, expiration_date = ?, type = ? WHERE id = ?")
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
-	_, err = update.Exec(food.Name, food.Quantity, food.Unit, food.ExpirationDate, food.Type, id)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "*")
-	w.Header().Set("Access-Control-Allow-Headers", "*")
-
-	fmt.Fprintf(w, "%s has been updated and quantity is altered.", food.Name)
-}
-
-// 食品のデータベースのフィールドそのものを削除する。再びその食品を使うには再度InsertFoodsを叩かなければならなくなる。
-// curl -X DELETE localhost:8080/backend/delete_food/(id)
-func DeleteFoods(w http.ResponseWriter, r *http.Request) {
-	id := strings.TrimPrefix(r.URL.Path, "/backend/delete_food/")
-
-	db := db.Connect()
-	defer db.Close()
-
 	delete, err := db.Prepare("DELETE FROM foods WHERE id = ?")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	_, err = delete.Exec(id)
+	_, err = delete.Exec(food.ID)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -218,6 +221,6 @@ func DeleteFoods(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Methods", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
 
-	fmt.Printf("Food which you select has been deleted")
-
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(food)
 }
