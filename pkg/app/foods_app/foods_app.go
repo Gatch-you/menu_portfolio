@@ -4,6 +4,7 @@ import (
 	db "backend/pkg/db"
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -44,6 +45,9 @@ func FetchFoods(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
+
+	fmt.Print("\nShow Foods")
+	fmt.Print(foodArgs)
 
 	json.NewEncoder(w).Encode(foodArgs)
 }
@@ -194,7 +198,7 @@ func UpdateFoods(w http.ResponseWriter, r *http.Request) {
 }
 
 // 食品のデータベースのフィールドそのものを削除する。再びその食品を使うには再度InsertFoodsを叩かなければならなくなる。
-// curl -X DELETE localhost:8080/backend/delete_food/(id)
+// curl -X DELETE -H "Content-Type: application.json" -d '{"food_id": 1}' http://localhost:8080/backend/delete_food
 func DeleteFoods(w http.ResponseWriter, r *http.Request) {
 	// id := strings.TrimPrefix(r.URL.Path, "/backend/delete_food/")
 
@@ -217,6 +221,7 @@ func DeleteFoods(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err.Error())
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "*")

@@ -28,10 +28,12 @@ func main() {
 	http.HandleFunc("/backend/recipe_food", recipe_food_app.FetchRecipesWithFood)
 	http.HandleFunc("/backend/recipe_food/update_food_storage/", recipe_food_app.UpdateFoodStorage)
 	http.HandleFunc("/backend/recipe_food/update_using_food_quantity", recipe_food_app.UpdateUsingFoodQuantity)
-
+	http.HandleFunc("/backend/recipe_food/insert_use_food_array", recipe_food_app.InsertUseFoodArray)
+	http.HandleFunc("/backend/recipes/", recipe_food_app.FetchRecipeDetail)
+	http.HandleFunc("/backend/delete_using_food", recipe_food_app.DeleteUsingFood)
+	http.HandleFunc("/backend/recipe_food/insert_use_food", recipe_food_app.InsertUseFood)
 	//goroutineで定時に発火させる
 	go recipe_food_app.FetchExpirationFood(nil, nil)
 
 	http.ListenAndServe(":8080", nil)
-
 }
