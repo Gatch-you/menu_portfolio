@@ -29,6 +29,18 @@ type RecipeFoodArray struct {
 	UseAmount float64 `json:"use_amount"`
 }
 
+type FoodsWithExpiration struct {
+	ID             int       `json:"id"`
+	FoodId         int       `json:"food_id"`
+	FoodName       string    `json:"food_name"`
+	FoodQuantity   float64   `json:"food_quantity"`
+	FoodUnit       string    `json:"food_unit"`
+	ExpirationDate time.Time `json:"expiration_date"`
+	RecipeId       int       `json:"recipe_id"`
+	RecipeName     string    `json:"recipe_name"`
+	UseAmount      float64   `json:"use_amount"`
+}
+
 type RecipeID struct {
 	RecipeID int `json:"recipe_id"`
 }
@@ -325,4 +337,31 @@ func FetchExpirationFood(w http.ResponseWriter, r *http.Request) []Recipe_food {
 		}
 		time.Sleep(time.Hour * 5)
 	}
+}
+
+func ShowFoodsWithExpiration(w http.ResponseWriter, r *http.Request) {
+	db := db.Connect()
+	defer db.Close()
+
+	rows, err := db.Query("SELECT rf.id, f.id, f.name, f.quantity, f.unit, f.expiration_date, r.id, r.name, rf.use_amount, f.unit FROM recipe_food rf JOIN foods f ON rf.food_id = f.id JOIN recipes r ON rf.recipe_id = r.id WHERE f.expiration_date >= DATE(NOW()) AND f.expiration_date <= DATE_ADD(DATE(NOW()), INTERVAL 5 DAY)")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	foodArgs := make([]FoodsWithExpiration, 0)
+	for rows.Next() {
+		var food_expiration FoodsWithExpiration
+		err = rows.Scan(&food_expiration.ID, &food_expiration.FoodId, &food_expiration.FoodName, &food_expiration.FoodQuantity, &food_expiration.FoodUnit, &food_expiration.ExpirationDate, &food_expiration.RecipeId, &food_expiration.RecipeName, &food_expiration.UseAmount, &food_expiration.FoodUnit)
+		if err != nil {
+			fmt.Print("missing query")
+			log.Fatal(err.Error())
+		}
+		foodArgs = append(foodArgs, food_expiration)
+	}
+
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+
+	json.NewEncoder(w).Encode(foodArgs)
 }

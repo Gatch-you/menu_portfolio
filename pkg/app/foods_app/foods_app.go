@@ -2,14 +2,11 @@ package foods_app
 
 import (
 	db "backend/pkg/db"
-	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"time"
-
-	"github.com/olivere/elastic/v7"
 )
 
 // 食品の構造体json形式のデータ変換等も行う
@@ -53,78 +50,78 @@ func FetchFoods(w http.ResponseWriter, r *http.Request) {
 }
 
 // 食品の検索に使うが、他の検索アルゴリズムに置き換わる可能性大
-func SearchFoods(w http.ResponseWriter, r *http.Request) {
+// func SearchFoods(w http.ResponseWriter, r *http.Request) {
 
-	elasticURL := "http://localhost:9200"
-	elasticUser := "root"
-	elasticPass := "hoge"
+// 	elasticURL := "http://localhost:9200"
+// 	elasticUser := "root"
+// 	elasticPass := "hoge"
 
-	esClient, err := elastic.NewClient(
-		elastic.SetURL(elasticURL),
-		elastic.SetBasicAuth(elasticUser, elasticPass),
-	)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+// 	esClient, err := elastic.NewClient(
+// 		elastic.SetURL(elasticURL),
+// 		elastic.SetBasicAuth(elasticUser, elasticPass),
+// 	)
+// 	if err != nil {
+// 		log.Fatal(err.Error())
+// 	}
 
-	db := db.Connect()
-	defer db.Close()
+// 	db := db.Connect()
+// 	defer db.Close()
 
-	rows, err := db.Query("SELECT * FROM foods")
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+// 	rows, err := db.Query("SELECT * FROM foods")
+// 	if err != nil {
+// 		log.Fatal(err.Error())
+// 	}
 
-	for rows.Next() {
-		var food Food
-		err = rows.Scan(&food.ID, &food.Name, &food.Quantity, &food.Unit, &food.ExpirationDate, &food.Type)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
+// 	for rows.Next() {
+// 		var food Food
+// 		err = rows.Scan(&food.ID, &food.Name, &food.Quantity, &food.Unit, &food.ExpirationDate, &food.Type)
+// 		if err != nil {
+// 			log.Fatal(err.Error())
+// 		}
 
-		//Elasticsearchへデータを保存
-		_, err = esClient.Index().
-			Index("foods").
-			BodyJson(food).
-			Do(context.Background())
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-	}
+// 		//Elasticsearchへデータを保存
+// 		_, err = esClient.Index().
+// 			Index("foods").
+// 			BodyJson(food).
+// 			Do(context.Background())
+// 		if err != nil {
+// 			log.Fatal(err.Error())
+// 		}
+// 	}
 
-	query := r.URL.Query().Get("name")
-	// 間違ってるかも
+// 	query := r.URL.Query().Get("name")
+// 	// 間違ってるかも
 
-	searchResult, err := esClient.Search().
-		Index("foods").
-		Query(elastic.NewMatchQuery("name", query)).
-		From(0).Size(10).
-		Do(context.Background())
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+// 	searchResult, err := esClient.Search().
+// 		Index("foods").
+// 		Query(elastic.NewMatchQuery("name", query)).
+// 		From(0).Size(10).
+// 		Do(context.Background())
+// 	if err != nil {
+// 		log.Fatal(err.Error())
+// 	}
 
-	//elasticServer上からヒットした検索結果を[]Foodのスライスに格納押したのちにfoodsへとappendしている。
-	foods := make([]Food, 0)
-	for _, hit := range searchResult.Hits.Hits {
-		var food Food
-		err := json.Unmarshal(hit.Source, &food)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-		foods = append(foods, food)
-	}
-	v, err := json.Marshal(foods)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+// 	//elasticServer上からヒットした検索結果を[]Foodのスライスに格納押したのちにfoodsへとappendしている。
+// 	foods := make([]Food, 0)
+// 	for _, hit := range searchResult.Hits.Hits {
+// 		var food Food
+// 		err := json.Unmarshal(hit.Source, &food)
+// 		if err != nil {
+// 			log.Fatal(err.Error())
+// 		}
+// 		foods = append(foods, food)
+// 	}
+// 	v, err := json.Marshal(foods)
+// 	if err != nil {
+// 		log.Fatal(err.Error())
+// 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Methods", "*")
-	w.Header().Set("Access-Control-Allow-Headers", "*")
+// 	w.Header().Set("Content-Type", "application/json")
+// 	w.Header().Set("Access-Control-Allow-Methods", "*")
+// 	w.Header().Set("Access-Control-Allow-Headers", "*")
 
-	w.Write(v)
-}
+// 	w.Write(v)
+// }
 
 // 新しい食品の項目追加
 // ↓実行コマンド

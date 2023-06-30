@@ -16,7 +16,7 @@ func main() {
 	http.HandleFunc("/backend/insert_food", foods_app.InsertFoods)
 	http.HandleFunc("/backend/delete_food", foods_app.DeleteFoods)
 	http.HandleFunc("/backend/update_food", foods_app.UpdateFoods)
-	http.HandleFunc("/backend/search_foods/", foods_app.SearchFoods)
+	// http.HandleFunc("/backend/search_foods/", foods_app.SearchFoods)
 
 	//recipes_appのリクエスト
 	http.HandleFunc("/backend/recipes", recipes_app.FetchRecipes)
@@ -32,6 +32,7 @@ func main() {
 	http.HandleFunc("/backend/recipes/", recipe_food_app.FetchRecipeDetail)
 	http.HandleFunc("/backend/delete_using_food", recipe_food_app.DeleteUsingFood)
 	http.HandleFunc("/backend/recipe_food/insert_use_food", recipe_food_app.InsertUseFood)
+	http.HandleFunc("/backend/recipe_food/foods_expiration", recipe_food_app.ShowFoodsWithExpiration)
 	//goroutineで定時に発火させる
 	go recipe_food_app.FetchExpirationFood(nil, nil)
 
