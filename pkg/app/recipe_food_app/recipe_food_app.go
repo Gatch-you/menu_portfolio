@@ -66,12 +66,16 @@ func FetchRecipesWithFood(w http.ResponseWriter, r *http.Request) {
 		rfArgs = append(rfArgs, recipe_food)
 	}
 
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	w.Header().Set("Access-Control-Allow-Methods", "*")
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
-	w.Write([]byte("Show the recipe with foods.\n"))
+	if r.Method == "OPTIONS" {
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 
+	w.Write([]byte("Show the recipe with foods.\n"))
 	json.NewEncoder(w).Encode(rfArgs)
 }
 
@@ -107,15 +111,17 @@ func FetchRecipeDetail(w http.ResponseWriter, r *http.Request) {
 		recipe_foods = append(recipe_foods, recipe_food)
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
 	if r.Method == "OPTIONS" {
 		return
 	}
+	w.WriteHeader(http.StatusOK)
+
 	fmt.Print("\nYou use API")
 	fmt.Print(recipe_foods)
-	w.WriteHeader(http.StatusOK)
 
 	json.NewEncoder(w).Encode(recipe_foods)
 }
@@ -138,15 +144,17 @@ func UpdateFoodStorage(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err.Error())
 		log.Println("Ingredients is out of stock!")
 	}
+
+	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
 	if r.Method == "OPTIONS" {
 		return
 	}
+	w.WriteHeader(http.StatusOK)
 
 	fmt.Printf("You've finished cooking! I've finished updating list you use ingredient. Nice Cooking!")
-	w.WriteHeader(http.StatusOK)
 }
 
 // レシピにて使用する食材の追加処理を行う関数. 将来的には一括で食材を登録することができるようにするために実装
@@ -175,14 +183,15 @@ func InsertUseFoodArray(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
 	if r.Method == "OPTIONS" {
 		return
 	}
-
 	w.WriteHeader(http.StatusOK)
+
 }
 
 // レシピにて使用する食材の登録処理 実装済み
@@ -208,14 +217,15 @@ func InsertUseFood(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err.Error())
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
 	if r.Method == "OPTIONS" {
 		return
 	}
-
 	w.WriteHeader(http.StatusOK)
+
 	json.NewEncoder(w).Encode(recipeFoodArray)
 }
 
@@ -240,6 +250,7 @@ func UpdateUsingFoodQuantity(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
@@ -273,14 +284,15 @@ func DeleteUsingFood(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err.Error())
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
 	if r.Method == "OPTIONS" {
 		return
 	}
-
 	w.WriteHeader(http.StatusOK)
+
 	json.NewEncoder(w).Encode(recipeFoodArray)
 }
 
@@ -371,6 +383,7 @@ func ShowFoodsWithExpiration(w http.ResponseWriter, r *http.Request) {
 		foodArgs = append(foodArgs, food_expiration)
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
