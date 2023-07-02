@@ -11,12 +11,26 @@ import (
 func main() {
 	log.Println("Hello, I'm Menu Proposer!")
 
+	// CORSミドルウェア関数
+	corsMiddleware := func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// レスポンスヘッダーに対するCORS設定を追加
+			w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+			if r.Method == "OPTIONS" {
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+
 	//foods_appのリクエスト処理
 	http.HandleFunc("/backend/foods", foods_app.FetchFoods)
 	http.HandleFunc("/backend/insert_food", foods_app.InsertFoods)
 	http.HandleFunc("/backend/delete_food", foods_app.DeleteFoods)
 	http.HandleFunc("/backend/update_food", foods_app.UpdateFoods)
-	// http.HandleFunc("/backend/search_foods/", foods_app.SearchFoods)
 
 	//recipes_appのリクエスト
 	http.HandleFunc("/backend/recipes", recipes_app.FetchRecipes)
@@ -36,5 +50,7 @@ func main() {
 	//goroutineで定時に発火させる
 	go recipe_food_app.FetchExpirationFood(nil, nil)
 
-	http.ListenAndServe(":8080", nil)
+	// CORSミドルウェアを適用
+	handler := corsMiddleware(http.DefaultServeMux)
+	http.ListenAndServe(":8080", handler)
 }

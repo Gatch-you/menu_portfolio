@@ -66,10 +66,11 @@ func FetchRecipesWithFood(w http.ResponseWriter, r *http.Request) {
 		rfArgs = append(rfArgs, recipe_food)
 	}
 
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 	w.Header().Set("Access-Control-Allow-Methods", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
 	w.Write([]byte("Show the recipe with foods.\n"))
+	w.WriteHeader(http.StatusOK)
 
 	json.NewEncoder(w).Encode(rfArgs)
 }
@@ -106,13 +107,15 @@ func FetchRecipeDetail(w http.ResponseWriter, r *http.Request) {
 		recipe_foods = append(recipe_foods, recipe_food)
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
-
+	if r.Method == "OPTIONS" {
+		return
+	}
 	fmt.Print("\nYou use API")
 	fmt.Print(recipe_foods)
+	w.WriteHeader(http.StatusOK)
 
 	json.NewEncoder(w).Encode(recipe_foods)
 }
@@ -135,11 +138,12 @@ func UpdateFoodStorage(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err.Error())
 		log.Println("Ingredients is out of stock!")
 	}
-
-	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
+	if r.Method == "OPTIONS" {
+		return
+	}
 
 	fmt.Printf("You've finished cooking! I've finished updating list you use ingredient. Nice Cooking!")
 	w.WriteHeader(http.StatusOK)
@@ -171,10 +175,12 @@ func InsertUseFoodArray(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
+	if r.Method == "OPTIONS" {
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -202,10 +208,12 @@ func InsertUseFood(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err.Error())
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
+	if r.Method == "OPTIONS" {
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(recipeFoodArray)
@@ -232,11 +240,13 @@ func UpdateUsingFoodQuantity(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-
-	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
+	if r.Method == "OPTIONS" {
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 
 	fmt.Println("Hey, you alter the amount of ingredients in recipe. OK, I accept")
 }
@@ -263,10 +273,12 @@ func DeleteUsingFood(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err.Error())
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
+	if r.Method == "OPTIONS" {
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(recipeFoodArray)
@@ -360,8 +372,12 @@ func ShowFoodsWithExpiration(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
+	if r.Method == "OPTIONS" {
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 
 	json.NewEncoder(w).Encode(foodArgs)
 }
