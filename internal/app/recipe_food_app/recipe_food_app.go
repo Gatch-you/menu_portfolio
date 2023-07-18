@@ -1,8 +1,8 @@
 package recipe_food_app
 
 import (
-	"backend/pkg/app/foods_app"
 	"backend/pkg/db"
+	model "backend/pkg/models"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -10,40 +10,6 @@ import (
 	"strings"
 	"time"
 )
-
-type Recipe_food struct {
-	ID                 int     `json:"id"`
-	RecipeId           int     `json:"recipe_id"`
-	RecipeName         string  `json:"recipe_name"`
-	RecipeDescription  string  `json:"recipe_description"`
-	FoodId             int     `json:"food_id"`
-	FoodName           string  `json:"food_name"`
-	UseAmount          float64 `json:"use_amount"`
-	FoodUnit           string  `json:"food_unit"`
-	RecipeMakingMethod string  `json:"recipe_making_method"`
-}
-
-type RecipeFoodArray struct {
-	FoodID    int     `json:"food_id"`
-	RecipeID  int     `json:"recipe_id"`
-	UseAmount float64 `json:"use_amount"`
-}
-
-type FoodsWithExpiration struct {
-	ID             int       `json:"id"`
-	FoodId         int       `json:"food_id"`
-	FoodName       string    `json:"food_name"`
-	FoodQuantity   float64   `json:"food_quantity"`
-	FoodUnit       string    `json:"food_unit"`
-	ExpirationDate time.Time `json:"expiration_date"`
-	RecipeId       int       `json:"recipe_id"`
-	RecipeName     string    `json:"recipe_name"`
-	UseAmount      float64   `json:"use_amount"`
-}
-
-type RecipeID struct {
-	RecipeID int `json:"recipe_id"`
-}
 
 // 使用する食材の名前と量の情報を保持しているレシピの一覧表示。
 // curl http://localhost:8080/backend/recipe_food
@@ -56,9 +22,9 @@ func FetchRecipesWithFood(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err.Error())
 	}
 
-	rfArgs := make([]Recipe_food, 0)
+	rfArgs := make([]model.Recipe_food, 0)
 	for rows.Next() {
-		var recipe_food Recipe_food
+		var recipe_food model.Recipe_food
 		err = rows.Scan(&recipe_food.ID, &recipe_food.RecipeId, &recipe_food.RecipeName, &recipe_food.RecipeDescription, &recipe_food.FoodId, &recipe_food.FoodName, &recipe_food.UseAmount, &recipe_food.FoodUnit, &recipe_food.RecipeMakingMethod)
 		if err != nil {
 			log.Fatal(err.Error())
@@ -101,9 +67,9 @@ func FetchRecipeDetail(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err.Error())
 	}
 
-	var recipe_foods []Recipe_food
+	var recipe_foods []model.Recipe_food
 	for rows.Next() {
-		var recipe_food Recipe_food
+		var recipe_food model.Recipe_food
 		err = rows.Scan(&recipe_food.ID, &recipe_food.RecipeId, &recipe_food.RecipeName, &recipe_food.RecipeDescription, &recipe_food.FoodId, &recipe_food.FoodName, &recipe_food.UseAmount, &recipe_food.FoodUnit, &recipe_food.RecipeMakingMethod)
 		if err != nil {
 			log.Fatal(err.Error())
@@ -161,7 +127,7 @@ func UpdateFoodStorage(w http.ResponseWriter, r *http.Request) {
 // curl -X POST -d '[{"recipe_id": 1, "food_id": 3, "use_amount": 2},{"recipe_id": 5, "food_id": 21, "use_amount": 100}]' http://localhost:8080/backend/recipe_food/insert_use_food_array
 func InsertUseFoodArray(w http.ResponseWriter, r *http.Request) {
 	// recipeFoodArrayへとリクエストボディに受け取ったjsonデータを配列として受け取る
-	var recipeFoodArray []RecipeFoodArray
+	var recipeFoodArray []model.RecipeFoodArray
 	err := json.NewDecoder(r.Body).Decode(&recipeFoodArray)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -201,7 +167,7 @@ func InsertUseFood(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	// recipeFoodArrayへとリクエストボディに受け取ったjsonデータを配列として受け取る
-	var recipeFoodArray RecipeFoodArray
+	var recipeFoodArray model.RecipeFoodArray
 	err := json.NewDecoder(r.Body).Decode(&recipeFoodArray)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -235,7 +201,7 @@ func UpdateUsingFoodQuantity(w http.ResponseWriter, r *http.Request) {
 	db := db.Connect()
 	defer db.Close()
 
-	var recipe_food Recipe_food
+	var recipe_food model.Recipe_food
 	err := json.NewDecoder(r.Body).Decode(&recipe_food)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -268,7 +234,7 @@ func DeleteUsingFood(w http.ResponseWriter, r *http.Request) {
 	db := db.Connect()
 	defer db.Close()
 
-	var recipeFoodArray RecipeFoodArray
+	var recipeFoodArray model.RecipeFoodArray
 	err := json.NewDecoder(r.Body).Decode(&recipeFoodArray)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -298,7 +264,7 @@ func DeleteUsingFood(w http.ResponseWriter, r *http.Request) {
 
 // 定時になったら、賞味期限が指定した日時以内の食品の一覧を表示し、
 // その食品を使って作ることができるレシピと、その食材の使用量を出力する関数
-func FetchExpirationFood(w http.ResponseWriter, r *http.Request) []Recipe_food {
+func FetchExpirationFood(w http.ResponseWriter, r *http.Request) []model.Recipe_food {
 	db := db.Connect()
 	defer db.Close()
 
@@ -319,9 +285,9 @@ func FetchExpirationFood(w http.ResponseWriter, r *http.Request) []Recipe_food {
 				log.Fatal(err.Error())
 			}
 
-			expirationFoodArgs := make([]foods_app.Food, 0)
+			expirationFoodArgs := make([]model.Food, 0)
 			for foodRows.Next() {
-				var food foods_app.Food
+				var food model.Food
 				err = foodRows.Scan(&food.Name, &food.Quantity, &food.Unit, &food.ExpirationDate)
 				if err != nil {
 					log.Fatal(err.Error())
@@ -334,9 +300,9 @@ func FetchExpirationFood(w http.ResponseWriter, r *http.Request) []Recipe_food {
 				log.Fatal(err.Error())
 			}
 
-			recipeWithExpirationFoodsArgs := make([]Recipe_food, 0)
+			recipeWithExpirationFoodsArgs := make([]model.Recipe_food, 0)
 			for recipeRows.Next() {
-				var recipe_food Recipe_food
+				var recipe_food model.Recipe_food
 				err = recipeRows.Scan(&recipe_food.ID, &recipe_food.RecipeName, &recipe_food.FoodName, &recipe_food.UseAmount)
 				if err != nil {
 					log.Fatal(err.Error())
@@ -348,16 +314,6 @@ func FetchExpirationFood(w http.ResponseWriter, r *http.Request) []Recipe_food {
 			fmt.Println(expirationFoodArgs)
 			fmt.Println(recipeWithExpirationFoodsArgs)
 
-			// jsonへと変換
-			// v, err := json.Marshal(expirationFoodArgs)
-			// if err != nil {
-			// 	log.Fatal(err.Error())
-			// }
-			// fmt.Println(v)
-
-			// goroutineで並列処理を実装するとmainから渡された関数の引数nilとwがぶつかってエラーが出たので、今はw.Writeはつかわない。
-			// w.Write([]byte("Show the Foods which expiration date having been closed in 3 days\n"))
-			// w.Write([]byte(v))
 		}
 		time.Sleep(time.Hour * 5)
 	}
@@ -372,9 +328,9 @@ func ShowFoodsWithExpiration(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err.Error())
 	}
 
-	foodArgs := make([]FoodsWithExpiration, 0)
+	foodArgs := make([]model.FoodsWithExpiration, 0)
 	for rows.Next() {
-		var food_expiration FoodsWithExpiration
+		var food_expiration model.FoodsWithExpiration
 		err = rows.Scan(&food_expiration.ID, &food_expiration.FoodId, &food_expiration.FoodName, &food_expiration.FoodQuantity, &food_expiration.FoodUnit, &food_expiration.ExpirationDate, &food_expiration.RecipeId, &food_expiration.RecipeName, &food_expiration.UseAmount, &food_expiration.FoodUnit)
 		if err != nil {
 			fmt.Print("missing query")

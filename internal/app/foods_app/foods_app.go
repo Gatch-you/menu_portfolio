@@ -2,6 +2,7 @@ package foods_app
 
 import (
 	db "backend/pkg/db"
+	model "backend/pkg/models"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -9,17 +10,6 @@ import (
 	"time"
 )
 
-// 食品の構造体json形式のデータ変換等も行う
-type Food struct {
-	ID             int       `json:"id"`
-	Name           string    `json:"name"`
-	Quantity       float64   `json:"quantity"`
-	Unit           string    `json:"unit"`
-	ExpirationDate time.Time `json:"expiration_date"`
-	Type           string    `json:"type"`
-}
-
-// 食品の一覧表示。frontにて表示件数を絞る必要が出てくるかも　→ フロントにて考慮のはず
 func FetchFoods(w http.ResponseWriter, r *http.Request) {
 	db := db.Connect()
 	defer db.Close()
@@ -29,9 +19,9 @@ func FetchFoods(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err.Error())
 	}
 
-	foodArgs := make([]Food, 0)
+	foodArgs := make([]model.Food, 0)
 	for rows.Next() {
-		var food Food
+		var food model.Food
 		err = rows.Scan(&food.ID, &food.Name, &food.Quantity, &food.Unit, &food.ExpirationDate, &food.Type)
 		if err != nil {
 			log.Fatal(err.Error())
@@ -134,7 +124,7 @@ func InsertFoods(w http.ResponseWriter, r *http.Request) {
 	db := db.Connect()
 	defer db.Close()
 
-	var food Food
+	var food model.Food
 	err := json.NewDecoder(r.Body).Decode(&food)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -176,7 +166,7 @@ func UpdateFoods(w http.ResponseWriter, r *http.Request) {
 	db := db.Connect()
 	defer db.Close()
 
-	var food Food
+	var food model.Food
 	err := json.NewDecoder(r.Body).Decode(&food)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -213,7 +203,7 @@ func DeleteFoods(w http.ResponseWriter, r *http.Request) {
 	db := db.Connect()
 	defer db.Close()
 
-	var food Food
+	var food model.Food
 	err := json.NewDecoder(r.Body).Decode(&food)
 	if err != nil {
 		log.Fatal(err.Error())

@@ -2,6 +2,7 @@ package recipes_app
 
 import (
 	db "backend/pkg/db"
+	model "backend/pkg/models"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -9,13 +10,6 @@ import (
 )
 
 // レシピの構造体json形式のデータ変換等も行う
-type Recipe struct {
-	ID            int    `json:"id"`
-	Name          string `json:"name"`
-	Description   string `json:"description"`
-	Image         any    `json:"image"`
-	Making_method string `json:"making_method"`
-}
 
 // レシピの一覧表示。frontにて表示件数を絞る必要が出てくるかも　→ フロントにて考慮のはず
 func FetchRecipes(w http.ResponseWriter, r *http.Request) {
@@ -27,9 +21,9 @@ func FetchRecipes(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err.Error())
 	}
 
-	recipeArgs := make([]Recipe, 0)
+	recipeArgs := make([]model.Recipe, 0)
 	for rows.Next() {
-		var recipe Recipe
+		var recipe model.Recipe
 		err = rows.Scan(&recipe.ID, &recipe.Name, &recipe.Description, &recipe.Image, &recipe.Making_method)
 		if err != nil {
 			log.Fatal(err.Error())
@@ -61,7 +55,7 @@ func InsertRecipe(w http.ResponseWriter, r *http.Request) {
 	db := db.Connect()
 	defer db.Close()
 
-	var recipe Recipe
+	var recipe model.Recipe
 	err := json.NewDecoder(r.Body).Decode(&recipe)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -99,7 +93,7 @@ func UpdateRecipe(w http.ResponseWriter, r *http.Request) {
 	db := db.Connect()
 	defer db.Close()
 
-	var recipe Recipe
+	var recipe model.Recipe
 	err := json.NewDecoder(r.Body).Decode(&recipe)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -133,7 +127,7 @@ func DeleteRecipe(w http.ResponseWriter, r *http.Request) {
 	db := db.Connect()
 	defer db.Close()
 
-	var recipe Recipe
+	var recipe model.Recipe
 	err := json.NewDecoder(r.Body).Decode(&recipe)
 	if err != nil {
 		log.Fatal(err.Error())

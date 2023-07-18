@@ -1,9 +1,9 @@
 package main
 
 import (
-	"backend/pkg/app/foods_app"
-	"backend/pkg/app/recipe_food_app"
-	"backend/pkg/app/recipes_app"
+	"backend/internal/app/foods_app"
+	"backend/internal/app/recipe_food_app"
+	"backend/internal/app/recipes_app"
 	"log"
 	"net/http"
 )
