@@ -11,7 +11,7 @@ MyCookBookは、あなたの料理体験を向上させ、創造性を引き出�
  ![Static Badge](https://img.shields.io/badge/AWS-EC2,RDS-yellow)
 
 **使用ライブラリ**  
-[github.com/go-sql-driver/mysql v1.7.0](https://go-sql-driver/mysql)
+[github.com/go-sql-driver/mysql v1.7.0](https://go-sql-driver/mysql)  
 [github.com/joho/godotenv v1.5.1](https://github.com/joho/godotenv)
 
 ## 機能の紹介
