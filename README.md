@@ -11,7 +11,6 @@ MyCookBookは、あなたの料理体験を向上させ、創造性を引き出�
  ![Static Badge](https://img.shields.io/badge/AWS-EC2,RDS-yellow)
 
 ## 機能の紹介
-
 このアプリケーションでは、以下の機能を実装しています。
 
 ### 食材情報の登録・変更・削除
