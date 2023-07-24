@@ -4,7 +4,7 @@ MyCookBookはアプリケーションはユーザーの料理アイデアを記�
 MyCookBookは、あなたの料理体験を向上させ、創造性を引き出すためのパートナーとなることでしょう。是非MyCookBookをご活用ください！  
 このリポジトリはサーバーサイドのものとなっています。  
 アプリケーションリンク: [MyCookBook](http://mycooookbook.com:3000)  
-フロントエンドのリポジトリ: [backend](https://github.com/Gatch-you/menu_proposer_frontend)
+フロントエンドのリポジトリ: [frontend](https://github.com/Gatch-you/menu_proposer_frontend)
 
 **使用技術**  
 ![Static Badge](https://img.shields.io/badge/golang-1.20.1-blue) ![Static Badge](https://img.shields.io/badge/MySQL-14.14-green)
