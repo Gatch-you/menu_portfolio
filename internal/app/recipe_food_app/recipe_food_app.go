@@ -17,14 +17,14 @@ func FetchRecipesWithFood(w http.ResponseWriter, r *http.Request) {
 	db := db.Connect()
 	defer db.Close()
 
-	rows, err := db.Query("SELECT rf.id, r.id, r.name, r.description, f.id, f.name, rf.use_amount, f.unit, r.making_method FROM recipe_food rf JOIN foods f ON rf.food_id = f.id JOIN recipes r ON rf.recipe_id = r.id")
+	rows, err := db.Query("SELECT rf.id, r.id, r.name, r.description, f.id, f.name, rf.use_amount, f.unit, r.makingMethod FROM recipe_food rf JOIN foods f ON rf.food_id = f.id JOIN recipes r ON rf.recipe_id = r.id")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	rfArgs := make([]model.Recipe_food, 0)
+	rfArgs := make([]model.RecipeFood, 0)
 	for rows.Next() {
-		var recipe_food model.Recipe_food
+		var recipe_food model.RecipeFood
 		err = rows.Scan(&recipe_food.ID, &recipe_food.RecipeId, &recipe_food.RecipeName, &recipe_food.RecipeDescription, &recipe_food.FoodId, &recipe_food.FoodName, &recipe_food.UseAmount, &recipe_food.FoodUnit, &recipe_food.RecipeMakingMethod)
 		if err != nil {
 			log.Fatal(err.Error())
@@ -57,7 +57,7 @@ func FetchRecipeDetail(w http.ResponseWriter, r *http.Request) {
 	// 	log.Fatal(err.Error())
 	// }
 
-	stmt, err := db.Prepare("SELECT rf.id, r.id, r.name, r.description, f.id, f.name, rf.use_amount, f.unit, r.making_method FROM recipe_food rf JOIN foods f ON rf.food_id = f.id JOIN recipes r ON rf.recipe_id = r.id WHERE r.id = ?")
+	stmt, err := db.Prepare("SELECT rf.id, r.id, r.name, r.description, f.id, f.name, rf.use_amount, f.unit, r.makingMethod FROM recipe_food rf JOIN foods f ON rf.food_id = f.id JOIN recipes r ON rf.recipe_id = r.id WHERE r.id = ?")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -67,9 +67,9 @@ func FetchRecipeDetail(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err.Error())
 	}
 
-	var recipe_foods []model.Recipe_food
+	var recipe_foods []model.RecipeFood
 	for rows.Next() {
-		var recipe_food model.Recipe_food
+		var recipe_food model.RecipeFood
 		err = rows.Scan(&recipe_food.ID, &recipe_food.RecipeId, &recipe_food.RecipeName, &recipe_food.RecipeDescription, &recipe_food.FoodId, &recipe_food.FoodName, &recipe_food.UseAmount, &recipe_food.FoodUnit, &recipe_food.RecipeMakingMethod)
 		if err != nil {
 			log.Fatal(err.Error())
@@ -201,7 +201,7 @@ func UpdateUsingFoodQuantity(w http.ResponseWriter, r *http.Request) {
 	db := db.Connect()
 	defer db.Close()
 
-	var recipe_food model.Recipe_food
+	var recipe_food model.RecipeFood
 	err := json.NewDecoder(r.Body).Decode(&recipe_food)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -264,7 +264,7 @@ func DeleteUsingFood(w http.ResponseWriter, r *http.Request) {
 
 // 定時になったら、賞味期限が指定した日時以内の食品の一覧を表示し、
 // その食品を使って作ることができるレシピと、その食材の使用量を出力する関数
-func FetchExpirationFood(w http.ResponseWriter, r *http.Request) []model.Recipe_food {
+func FetchExpirationFood(w http.ResponseWriter, r *http.Request) []model.RecipeFood {
 	db := db.Connect()
 	defer db.Close()
 
@@ -280,7 +280,7 @@ func FetchExpirationFood(w http.ResponseWriter, r *http.Request) []model.Recipe_
 
 		if now == time.Date(now.Year(), now.Month(), now.Day(), 15, now.Minute(), now.Second(), now.Nanosecond(), loc) {
 
-			foodRows, err := db.Query("SELECT name, quantity, unit, expiration_date FROM foods WHERE expiration_date >= DATE(NOW()) AND expiration_date <= DATE_ADD(DATE(NOW()), INTERVAL 5 DAY)")
+			foodRows, err := db.Query("SELECT name, quantity, unit, expirationDate FROM foods WHERE expirationDate >= DATE(NOW()) AND expirationDate <= DATE_ADD(DATE(NOW()), INTERVAL 5 DAY)")
 			if err != nil {
 				log.Fatal(err.Error())
 			}
@@ -295,14 +295,14 @@ func FetchExpirationFood(w http.ResponseWriter, r *http.Request) []model.Recipe_
 				expirationFoodArgs = append(expirationFoodArgs, food)
 			}
 
-			recipeRows, err := db.Query("SELECT rf.id, r.name, f.name, rf.use_amount FROM recipe_food rf JOIN foods f ON rf.food_id = f.id JOIN recipes r ON rf.recipe_id = r.id WHERE f.expiration_date >= DATE(NOW()) AND f.expiration_date <= DATE_ADD(DATE(NOW()), INTERVAL 5 DAY)")
+			recipeRows, err := db.Query("SELECT rf.id, r.name, f.name, rf.use_amount FROM recipe_food rf JOIN foods f ON rf.food_id = f.id JOIN recipes r ON rf.recipe_id = r.id WHERE f.expirationDate >= DATE(NOW()) AND f.expirationDate <= DATE_ADD(DATE(NOW()), INTERVAL 5 DAY)")
 			if err != nil {
 				log.Fatal(err.Error())
 			}
 
-			recipeWithExpirationFoodsArgs := make([]model.Recipe_food, 0)
+			recipeWithExpirationFoodsArgs := make([]model.RecipeFood, 0)
 			for recipeRows.Next() {
-				var recipe_food model.Recipe_food
+				var recipe_food model.RecipeFood
 				err = recipeRows.Scan(&recipe_food.ID, &recipe_food.RecipeName, &recipe_food.FoodName, &recipe_food.UseAmount)
 				if err != nil {
 					log.Fatal(err.Error())
@@ -323,7 +323,7 @@ func ShowFoodsWithExpiration(w http.ResponseWriter, r *http.Request) {
 	db := db.Connect()
 	defer db.Close()
 
-	rows, err := db.Query("SELECT rf.id, f.id, f.name, f.quantity, f.unit, f.expiration_date, r.id, r.name, rf.use_amount, f.unit FROM recipe_food rf JOIN foods f ON rf.food_id = f.id JOIN recipes r ON rf.recipe_id = r.id WHERE f.expiration_date >= DATE(NOW()) AND f.expiration_date <= DATE_ADD(DATE(NOW()), INTERVAL 5 DAY)")
+	rows, err := db.Query("SELECT rf.id, f.id, f.name, f.quantity, f.unit, f.expirationDate, r.id, r.name, rf.use_amount, f.unit FROM recipe_food rf JOIN foods f ON rf.food_id = f.id JOIN recipes r ON rf.recipe_id = r.id WHERE f.expirationDate >= DATE(NOW()) AND f.expirationDate <= DATE_ADD(DATE(NOW()), INTERVAL 5 DAY)")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
