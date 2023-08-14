@@ -17,7 +17,7 @@ func FetchRecipesWithFood(w http.ResponseWriter, r *http.Request) {
 	db := db.Connect()
 	defer db.Close()
 
-	rows, err := db.Query("SELECT rf.id, r.id, r.name, r.description, f.id, f.name, rf.use_amount, f.unit, r.makingMethod FROM recipe_food rf JOIN foods f ON rf.food_id = f.id JOIN recipes r ON rf.recipe_id = r.id")
+	rows, err := db.Query("SELECT rf.id, r.id, r.name, r.description, f.id, f.name, rf.use_amount, f.unit, r.making_method FROM recipe_food rf JOIN foods f ON rf.food_id = f.id JOIN recipes r ON rf.recipe_id = r.id")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -57,7 +57,7 @@ func FetchRecipeDetail(w http.ResponseWriter, r *http.Request) {
 	// 	log.Fatal(err.Error())
 	// }
 
-	stmt, err := db.Prepare("SELECT rf.id, r.id, r.name, r.description, f.id, f.name, rf.use_amount, f.unit, r.makingMethod FROM recipe_food rf JOIN foods f ON rf.food_id = f.id JOIN recipes r ON rf.recipe_id = r.id WHERE r.id = ?")
+	stmt, err := db.Prepare("SELECT rf.id, r.id, r.name, r.description, f.id, f.name, rf.use_amount, f.unit, r.making_method FROM recipe_food rf JOIN foods f ON rf.food_id = f.id JOIN recipes r ON rf.recipe_id = r.id WHERE r.id = ?")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -323,7 +323,7 @@ func ShowFoodsWithExpiration(w http.ResponseWriter, r *http.Request) {
 	db := db.Connect()
 	defer db.Close()
 
-	rows, err := db.Query("SELECT rf.id, f.id, f.name, f.quantity, f.unit, f.expirationDate, r.id, r.name, rf.use_amount, f.unit FROM recipe_food rf JOIN foods f ON rf.food_id = f.id JOIN recipes r ON rf.recipe_id = r.id WHERE f.expirationDate >= DATE(NOW()) AND f.expirationDate <= DATE_ADD(DATE(NOW()), INTERVAL 5 DAY)")
+	rows, err := db.Query("SELECT rf.id, f.id, f.name, f.quantity, f.unit, f.expiration_date, r.id, r.name, rf.use_amount, f.unit FROM recipe_food rf JOIN foods f ON rf.food_id = f.id JOIN recipes r ON rf.recipe_id = r.id WHERE f.expiration_date >= DATE(NOW()) AND f.expiration_date <= DATE_ADD(DATE(NOW()), INTERVAL 5 DAY) ORDER BY expiration_date")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -332,10 +332,13 @@ func ShowFoodsWithExpiration(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var food_expiration model.FoodsWithExpiration
 		err = rows.Scan(&food_expiration.ID, &food_expiration.FoodId, &food_expiration.FoodName, &food_expiration.FoodQuantity, &food_expiration.FoodUnit, &food_expiration.ExpirationDate, &food_expiration.RecipeId, &food_expiration.RecipeName, &food_expiration.UseAmount, &food_expiration.FoodUnit)
+
 		if err != nil {
 			fmt.Print("missing query")
 			log.Fatal(err.Error())
 		}
+		food_expiration.FormattedDate = food_expiration.ExpirationDate.Format("2006-01-02")
+
 		foodArgs = append(foodArgs, food_expiration)
 	}
 
@@ -349,4 +352,5 @@ func ShowFoodsWithExpiration(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	json.NewEncoder(w).Encode(foodArgs)
+	fmt.Println("以降フォーマットデータ", foodArgs)
 }

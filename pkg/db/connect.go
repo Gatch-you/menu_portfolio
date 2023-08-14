@@ -15,7 +15,7 @@ func Connect() *sql.DB {
 		log.Fatal(err.Error())
 	}
 
-	db, err := sql.Open("mysql", os.Getenv("DB_ROLE")+":"+os.Getenv("DB_PASSWORD")+"@tcp(localhost:3306)/"+os.Getenv("DB_NAME")+"?parseTime=true")
+	db, err := sql.Open("mysql", os.Getenv("DB_ROLE")+":"+os.Getenv("DB_PASSWORD")+"@tcp("+os.Getenv("DB_ADDRESS")+")/"+os.Getenv("DB_NAME")+"?parseTime=true")
 	if err != nil {
 		log.Fatal(err.Error())
 	}

@@ -19,7 +19,7 @@ type Recipe struct {
 	Name          string `json:"name"`
 	Description   string `json:"description"`
 	Image         any    `json:"image"`
-	Making_method string `json:"makingMethod"`
+	Making_method string `json:"making_method"`
 }
 
 // recipe_food_appにて用いるmodels
@@ -32,7 +32,7 @@ type RecipeFood struct {
 	FoodName           string  `json:"food_name"`
 	UseAmount          float64 `json:"use_amount"`
 	FoodUnit           string  `json:"food_unit"`
-	RecipeMakingMethod string  `json:"recipe_makingMethod"`
+	RecipeMakingMethod string  `json:"recipe_making_method"`
 }
 
 type RecipeFoodArray struct {
@@ -48,6 +48,7 @@ type FoodsWithExpiration struct {
 	FoodQuantity   float64   `json:"food_quantity"`
 	FoodUnit       string    `json:"food_unit"`
 	ExpirationDate time.Time `json:"expirationDate"`
+	FormattedDate  string    `json:"formatted_date"`
 	RecipeId       int       `json:"recipe_id"`
 	RecipeName     string    `json:"recipe_name"`
 	UseAmount      float64   `json:"use_amount"`

@@ -52,5 +52,5 @@ func main() {
 
 	// CORSミドルウェアを適用
 	handler := corsMiddleware(http.DefaultServeMux)
-	http.ListenAndServe(":80", handler)
+	http.ListenAndServe(":8080", handler)
 }
