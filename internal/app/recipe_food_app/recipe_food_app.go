@@ -280,7 +280,7 @@ func FetchExpirationFood(w http.ResponseWriter, r *http.Request) []model.RecipeF
 
 		if now == time.Date(now.Year(), now.Month(), now.Day(), 15, now.Minute(), now.Second(), now.Nanosecond(), loc) {
 
-			foodRows, err := db.Query("SELECT name, quantity, unit, expirationDate FROM foods WHERE expirationDate >= DATE(NOW()) AND expirationDate <= DATE_ADD(DATE(NOW()), INTERVAL 5 DAY)")
+			foodRows, err := db.Query("SELECT name, quantity, unit, expiration_date FROM foods WHERE expiration_date >= DATE(NOW()) AND expiration_date <= DATE_ADD(DATE(NOW()), INTERVAL 5 DAY)")
 			if err != nil {
 				log.Fatal(err.Error())
 			}
@@ -295,7 +295,7 @@ func FetchExpirationFood(w http.ResponseWriter, r *http.Request) []model.RecipeF
 				expirationFoodArgs = append(expirationFoodArgs, food)
 			}
 
-			recipeRows, err := db.Query("SELECT rf.id, r.name, f.name, rf.use_amount FROM recipe_food rf JOIN foods f ON rf.food_id = f.id JOIN recipes r ON rf.recipe_id = r.id WHERE f.expirationDate >= DATE(NOW()) AND f.expirationDate <= DATE_ADD(DATE(NOW()), INTERVAL 5 DAY)")
+			recipeRows, err := db.Query("SELECT rf.id, r.name, f.name, rf.use_amount FROM recipe_food rf JOIN foods f ON rf.food_id = f.id JOIN recipes r ON rf.recipe_id = r.id WHERE f.expiration_date >= DATE(NOW()) AND f.expiration_date <= DATE_ADD(DATE(NOW()), INTERVAL 5 DAY)")
 			if err != nil {
 				log.Fatal(err.Error())
 			}

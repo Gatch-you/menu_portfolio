@@ -8,7 +8,7 @@ type Food struct {
 	Name           string    `json:"name"`
 	Quantity       float64   `json:"quantity"`
 	Unit           string    `json:"unit"`
-	ExpirationDate time.Time `json:"expirationDate"`
+	ExpirationDate time.Time `json:"expiration_date"`
 	Type           string    `json:"type"`
 }
 
@@ -47,7 +47,7 @@ type FoodsWithExpiration struct {
 	FoodName       string    `json:"food_name"`
 	FoodQuantity   float64   `json:"food_quantity"`
 	FoodUnit       string    `json:"food_unit"`
-	ExpirationDate time.Time `json:"expirationDate"`
+	ExpirationDate time.Time `json:"expiration_date"`
 	FormattedDate  string    `json:"formatted_date"`
 	RecipeId       int       `json:"recipe_id"`
 	RecipeName     string    `json:"recipe_name"`
