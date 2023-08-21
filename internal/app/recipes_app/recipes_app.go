@@ -133,6 +133,16 @@ func DeleteRecipe(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err.Error())
 	}
 
+	delInRecipeFood, err := db.Prepare("DELETE FROM recipe_food WHERE recipe_id = ?")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	_, err = delInRecipeFood.Exec(recipe.ID)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
 	delt, err := db.Prepare("DELETE FROM recipes WHERE id = ?")
 	if err != nil {
 		log.Fatal(err.Error())

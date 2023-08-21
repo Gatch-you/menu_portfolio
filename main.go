@@ -31,6 +31,7 @@ func main() {
 	http.HandleFunc("/backend/insert_food", foods_app.InsertFoods)
 	http.HandleFunc("/backend/delete_food", foods_app.DeleteFoods)
 	http.HandleFunc("/backend/update_food", foods_app.UpdateFoods)
+	http.HandleFunc("/backend/search_name", foods_app.SearchFoodsName)
 
 	//recipes_appのリクエスト
 	http.HandleFunc("/backend/recipes", recipes_app.FetchRecipes)
@@ -47,10 +48,10 @@ func main() {
 	http.HandleFunc("/backend/delete_using_food", recipe_food_app.DeleteUsingFood)
 	http.HandleFunc("/backend/recipe_food/insert_use_food", recipe_food_app.InsertUseFood)
 	http.HandleFunc("/backend/recipe_food/foods_expiration", recipe_food_app.ShowFoodsWithExpiration)
-	//goroutineで定時に発火させる
+	//goroutineで定時に発火させる→今後メールアドレス等による機能の実装を可能にする。
 	go recipe_food_app.FetchExpirationFood(nil, nil)
 
-	// CORSミドルウェアを適用
+	// CORSミドルウェア関数を用いてCORS解決
 	handler := corsMiddleware(http.DefaultServeMux)
 	http.ListenAndServe(":8080", handler)
 }

@@ -26,6 +26,8 @@ func FetchFoods(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatal(err.Error())
 		}
+		food.FormattedDate = food.ExpirationDate.Format("2006-01-02")
+
 		foodArgs = append(foodArgs, food)
 	}
 
@@ -43,79 +45,40 @@ func FetchFoods(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(foodArgs)
 }
 
-// 食品の検索に使うが、他の検索アルゴリズムに置き換わる可能性大
-// func SearchFoods(w http.ResponseWriter, r *http.Request) {
+// curl http://localhost:8080/backend/foods/search_name%q=
+func SearchFoodsName(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query().Get("q")
 
-// 	elasticURL := "http://localhost:9200"
-// 	elasticUser := "root"
-// 	elasticPass := "hoge"
+	db := db.Connect()
+	defer db.Close()
 
-// 	esClient, err := elastic.NewClient(
-// 		elastic.SetURL(elasticURL),
-// 		elastic.SetBasicAuth(elasticUser, elasticPass),
-// 	)
-// 	if err != nil {
-// 		log.Fatal(err.Error())
-// 	}
+	rows, err := db.Query("SELECT name, quantity, unit, expiration_date FROM foods WHERE name LIKE ?", "%"+query+"%")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 
-// 	db := db.Connect()
-// 	defer db.Close()
+	foodArgs := make([]model.Food, 0)
+	for rows.Next() {
+		var food model.Food
+		err = rows.Scan(&food.Name, &food.Quantity, &food.Unit, &food.ExpirationDate)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		foodArgs = append(foodArgs, food)
+	}
 
-// 	rows, err := db.Query("SELECT * FROM foods")
-// 	if err != nil {
-// 		log.Fatal(err.Error())
-// 	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	if r.Method == "OPTIONS" {
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 
-// 	for rows.Next() {
-// 		var food Food
-// 		err = rows.Scan(&food.ID, &food.Name, &food.Quantity, &food.Unit, &food.ExpirationDate, &food.Type)
-// 		if err != nil {
-// 			log.Fatal(err.Error())
-// 		}
+	json.NewEncoder(w).Encode(foodArgs)
 
-// 		//Elasticsearchへデータを保存
-// 		_, err = esClient.Index().
-// 			Index("foods").
-// 			BodyJson(food).
-// 			Do(context.Background())
-// 		if err != nil {
-// 			log.Fatal(err.Error())
-// 		}
-// 	}
-
-// 	query := r.URL.Query().Get("name")
-// 	// 間違ってるかも
-
-// 	searchResult, err := esClient.Search().
-// 		Index("foods").
-// 		Query(elastic.NewMatchQuery("name", query)).
-// 		From(0).Size(10).
-// 		Do(context.Background())
-// 	if err != nil {
-// 		log.Fatal(err.Error())
-// 	}
-
-// 	//elasticServer上からヒットした検索結果を[]Foodのスライスに格納押したのちにfoodsへとappendしている。
-// 	foods := make([]Food, 0)
-// 	for _, hit := range searchResult.Hits.Hits {
-// 		var food Food
-// 		err := json.Unmarshal(hit.Source, &food)
-// 		if err != nil {
-// 			log.Fatal(err.Error())
-// 		}
-// 		foods = append(foods, food)
-// 	}
-// 	v, err := json.Marshal(foods)
-// 	if err != nil {
-// 		log.Fatal(err.Error())
-// 	}
-
-// 	w.Header().Set("Content-Type", "application/json")
-// 	w.Header().Set("Access-Control-Allow-Methods", "*")
-// 	w.Header().Set("Access-Control-Allow-Headers", "*")
-
-// 	w.Write(v)
-// }
+}
 
 // 新しい食品の項目追加
 // ↓実行コマンド

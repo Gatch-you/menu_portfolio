@@ -9,6 +9,7 @@ type Food struct {
 	Quantity       float64   `json:"quantity"`
 	Unit           string    `json:"unit"`
 	ExpirationDate time.Time `json:"expiration_date"`
+	FormattedDate  string    `json:"formatted_date"`
 	Type           string    `json:"type"`
 }
 

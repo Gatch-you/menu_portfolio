@@ -352,5 +352,4 @@ func ShowFoodsWithExpiration(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	json.NewEncoder(w).Encode(foodArgs)
-	fmt.Println("以降フォーマットデータ", foodArgs)
 }
