@@ -1,57 +1,59 @@
 package main
 
 import (
-	"backend/internal/app/foods_app"
-	"backend/internal/app/recipe_food_app"
-	"backend/internal/app/recipes_app"
+	database "backend/src/database"
+	"backend/src/routes"
+
 	"log"
-	"net/http"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
 func main() {
+
+	database.Connect()
+	database.AutoMigrate()
 	log.Println("Hello, I'm Menu Proposer!")
 
-	// CORSミドルウェア関数
-	corsMiddleware := func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// レスポンスヘッダーに対するCORS設定を追加
-			w.Header().Set("Access-Control-Allow-Origin", "*")
-			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
-			w.Header().Set("Access-Control-Allow-Headers", "*")
+	app := fiber.New()
 
-			if r.Method == "OPTIONS" {
-				return
-			}
-			next.ServeHTTP(w, r)
-		})
-	}
+	app.Use(cors.New(cors.Config{
+		AllowCredentials: true,
+		AllowOrigins:     "http://localhost:3000",
+	}))
 
-	//foods_appのリクエスト処理
-	http.HandleFunc("/backend/foods", foods_app.FetchFoods)
-	http.HandleFunc("/backend/insert_food", foods_app.InsertFoods)
-	http.HandleFunc("/backend/delete_food", foods_app.DeleteFoods)
-	http.HandleFunc("/backend/update_food", foods_app.UpdateFoods)
-	http.HandleFunc("/backend/search_name", foods_app.SearchFoodsName)
+	routes.Setup(app)
 
-	//recipes_appのリクエスト
-	http.HandleFunc("/backend/recipes", recipes_app.FetchRecipes)
-	http.HandleFunc("/backend/insert_recipe", recipes_app.InsertRecipe)
-	http.HandleFunc("/backend/update_recipe", recipes_app.UpdateRecipe)
-	http.HandleFunc("/backend/delete_recipe", recipes_app.DeleteRecipe)
+	app.Listen(":3000")
 
-	//recipe_foodのリクエスト
-	http.HandleFunc("/backend/recipe_food", recipe_food_app.FetchRecipesWithFood)
-	http.HandleFunc("/backend/recipe_food/update_food_storage/", recipe_food_app.UpdateFoodStorage)
-	http.HandleFunc("/backend/recipe_food/update_using_food_quantity", recipe_food_app.UpdateUsingFoodQuantity)
-	http.HandleFunc("/backend/recipe_food/insert_use_food_array", recipe_food_app.InsertUseFoodArray)
-	http.HandleFunc("/backend/recipes/", recipe_food_app.FetchRecipeDetail)
-	http.HandleFunc("/backend/delete_using_food", recipe_food_app.DeleteUsingFood)
-	http.HandleFunc("/backend/recipe_food/insert_use_food", recipe_food_app.InsertUseFood)
-	http.HandleFunc("/backend/recipe_food/foods_expiration", recipe_food_app.ShowFoodsWithExpiration)
-	//goroutineで定時に発火させる→今後メールアドレス等による機能の実装を可能にする。
-	go recipe_food_app.FetchExpirationFood(nil, nil)
+	// //controllersのリクエスト処理
+	// http.HandleFunc("/backend/test", connection_test)
+	// http.HandleFunc("/backend/foods", controllers.FetchFoods)
+	// http.HandleFunc("/backend/insert_food", controllers.InsertFoods)
+	// http.HandleFunc("/backend/delete_food", controllers.DeleteFoods)
+	// http.HandleFunc("/backend/update_food", controllers.UpdateFoods)
+	// http.HandleFunc("/backend/search_name", controllers.SearchFoodsName)
 
-	// CORSミドルウェア関数を用いてCORS解決
-	handler := corsMiddleware(http.DefaultServeMux)
-	http.ListenAndServe(":8080", handler)
+	// //controllersのリクエスト
+	// http.HandleFunc("/backend/recipes", controllers.FetchRecipes)
+	// http.HandleFunc("/backend/insert_recipe", controllers.InsertRecipe)
+	// http.HandleFunc("/backend/update_recipe", controllers.UpdateRecipe)
+	// http.HandleFunc("/backend/delete_recipe", controllers.DeleteRecipe)
+
+	// //recipe_foodのリクエスト
+	// http.HandleFunc("/backend/recipe_food", controllers.FetchRecipesWithFood)
+	// http.HandleFunc("/backend/recipe_food/update_food_storage/", controllers.UpdateFoodStorage)
+	// http.HandleFunc("/backend/recipe_food/update_using_food_quantity", controllers.UpdateUsingFoodQuantity)
+	// http.HandleFunc("/backend/recipe_food/insert_use_food_array", controllers.InsertUseFoodArray)
+	// http.HandleFunc("/backend/recipes/", controllers.FetchRecipeDetail)
+	// http.HandleFunc("/backend/delete_using_food", controllers.DeleteUsingFood)
+	// http.HandleFunc("/backend/recipe_food/insert_use_food", controllers.InsertUseFood)
+	// http.HandleFunc("/backend/recipe_food/foods_expiration", controllers.ShowFoodsWithExpiration)
+	// //goroutineで定時に発火させる→今後Line等による機能の実装を可能にする。
+	// go controllers.FetchExpirationFood(nil, nil)
+
+	// // CORSミドルウェア関数を用いてCORS解決
+	// CORSHandler := middleware.CorsMiddleware(http.DefaultServeMux)
+	// http.ListenAndServe(":8000", CORSHandler)
 }
