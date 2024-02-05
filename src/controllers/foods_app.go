@@ -13,23 +13,23 @@ import (
 func FetchFoods(c *fiber.Ctx) error {
 	var foods []models.Food
 
-	user_id, _ := middlewares.GetUserId(c)
+	userId, _ := middlewares.GetUserId(c)
 
-	database.DB.Where("user_id = ?", user_id).Find(&foods)
+	database.DB.Where("user_id = ?", userId).Find(&foods)
 
 	return c.JSON(foods)
 }
 
 // todo:バリテーションの実施
-func CreateFoods(c *fiber.Ctx) error {
+func CreateFood(c *fiber.Ctx) error {
 	var food models.Food
 
 	if err := c.BodyParser(&food); err != nil {
 		return err
 	}
 
-	user_id, _ := middlewares.GetUserId(c)
-	food.UserId = user_id
+	userId, _ := middlewares.GetUserId(c)
+	food.UserId = userId
 
 	expirationDate, err := time.Parse("2006-01-02", food.ExpirationDate.Format("2006-01-02"))
 	if err != nil {
@@ -52,8 +52,8 @@ func UpdateFood(c *fiber.Ctx) error {
 		return err
 	}
 
-	user_id, _ := middlewares.GetUserId(c)
-	food.UserId = user_id
+	userId, _ := middlewares.GetUserId(c)
+	food.UserId = userId
 
 	expirationDate, err := time.Parse("2006-01-02", food.ExpirationDate.Format("2006-01-02"))
 	if err != nil {
@@ -69,7 +69,7 @@ func UpdateFood(c *fiber.Ctx) error {
 	return c.JSON(food)
 }
 
-func SoftDeleteFoods(c *fiber.Ctx) error {
+func SoftDeleteFood(c *fiber.Ctx) error {
 	var food models.Food
 
 	if err := c.BodyParser(&food); err != nil {
@@ -95,7 +95,7 @@ func SoftDeleteFoods(c *fiber.Ctx) error {
 	return c.JSON(food)
 }
 
-func DeleteFoods(c *fiber.Ctx) error {
+func DeleteFood(c *fiber.Ctx) error {
 	var food models.Food
 
 	if err := c.BodyParser(&food); err != nil {
