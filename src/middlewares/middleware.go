@@ -1,8 +1,6 @@
 package middlewares
 
 import (
-	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -16,20 +14,6 @@ const SecretKey = "secret"
 type ClaimsWithScope struct {
 	jwt.StandardClaims
 	Scope string
-}
-
-func CorsMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Access-Control-Allow-Origin", os.Getenv("ACCESS_ALLOW_ORIGIN"))
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
-		w.Header().Set("Access-Control-Allow-Headers", "*")
-		w.WriteHeader(http.StatusOK)
-		if r.Method == "OPTIONS" {
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
 }
 
 func IsUser(c *fiber.Ctx) error {
