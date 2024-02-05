@@ -34,6 +34,10 @@ func Setup(app *fiber.App) {
 	userAuthenticated.Post("recipes", controllers.CreateRecipe)
 	userAuthenticated.Put("recipes", controllers.UpdateRecipe)
 	userAuthenticated.Delete("recipes", controllers.DeleteRecipe)
+	userAuthenticated.Delete("recipes", controllers.DeleteRecipe)
+
+	userAuthenticated.Get("recipes/detail/:id", controllers.FetchRecipeWithFoods)
+	userAuthenticated.Post("recipes/resistfood/:id", controllers.RegisterFoodToRecipe)
 
 	// userAuthenticated := api.Use(middlewares.IsUser)
 

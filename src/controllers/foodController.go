@@ -15,7 +15,7 @@ func FetchFoods(c *fiber.Ctx) error {
 
 	userId, _ := middlewares.GetUserId(c)
 
-	database.DB.Where("user_id = ?", userId).Find(&foods)
+	database.DB.Where("user_id = ?", userId).Preload("FoodUnit").Preload("FoodType").Find(&foods)
 
 	return c.JSON(foods)
 }

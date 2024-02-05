@@ -6,7 +6,7 @@ type Recipe struct {
 	Description  string `json:"description"`
 	MakingMethod string `json:"making_method"`
 	UserId       uint   `json:"user_id"`
-	User         User   `gorm:"foreignKey:UserId"`
+	Foods        []Food `json:"foods" gorm:"many2many:recipe_food_relations;"`
 }
 
 type RecipeFoodRelation struct {

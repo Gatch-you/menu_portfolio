@@ -4,6 +4,8 @@ import (
 	database "backend/src/database"
 	"backend/src/middlewares"
 	"backend/src/models"
+	"fmt"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -60,6 +62,61 @@ func DeleteRecipe(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{
 		"message": "Success",
+	})
+}
+
+func FetchRecipeWithFoods(c *fiber.Ctx) error {
+	recipeId := c.Params("id")
+
+	// userId, _ := middlewares.GetUserId(c)
+
+	var recipe models.Recipe
+	fmt.Println(recipeId)
+	// fmt.Println(userId)
+	if err := database.DB.Preload("Foods").Preload("Foods.FoodUnit").Where("id = ? ", recipeId).First(&recipe).Error; err != nil {
+		c.Status(fiber.StatusNotFound)
+		return c.JSON(fiber.Map{
+			"message": "レシピが見つかりません",
+		})
+	}
+
+	return c.JSON(recipe)
+}
+
+type FoodToAdd struct {
+	FoodId    uint    `json:"food_id"`
+	UseAmount float64 `json:"use_amount"`
+}
+
+func RegisterFoodToRecipe(c *fiber.Ctx) error {
+	recipeId, err := strconv.ParseUint(c.Params("id"), 10, 64)
+	if err != nil {
+		return c.JSON(fiber.Map{
+			"message": "URLエンドポイントのパラメータが正しくありません",
+		})
+	}
+
+	var foodToAdd FoodToAdd
+	if err := c.BodyParser(&foodToAdd); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Request body is not valid",
+		})
+	}
+
+	relation := models.RecipeFoodRelation{
+		FoodId:    foodToAdd.FoodId,
+		RecipeId:  uint(recipeId), // recipeID を適切な型に変換する必要があるかもしれません
+		UseAmount: foodToAdd.UseAmount,
+	}
+
+	if err := database.DB.Create(&relation).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Could not add food to recipe",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "success",
 	})
 }
 
