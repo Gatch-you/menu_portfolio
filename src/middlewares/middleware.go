@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -99,6 +98,35 @@ func IsAuthenticated(c *fiber.Ctx) error {
 	return c.Next()
 }
 
+func IsTmpAuthenticated(c *fiber.Ctx) error {
+	cookie := c.Cookies("SID_MCB_TMP")
+
+	// cookieからvalueを取得して配列を返す
+	token, err := jwt.ParseWithClaims(cookie, &ClaimsWithScope{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(SecretKey), nil
+	})
+
+	// 取得した配列に対して
+	if err != nil || !token.Valid {
+		c.Status(fiber.StatusUnauthorized)
+		return c.JSON(fiber.Map{
+			"message": "Cookieの有効期間が切れています。再度メールアドレス認証からやり直してください。",
+		})
+	}
+
+	payload := token.Claims.(*ClaimsWithScope)
+	isUser := strings.Contains(c.Path(), "/api/user")
+
+	if (payload.Scope == "admin" && isUser) || (payload.Scope == "ambassador" && !isUser) {
+		c.Status(fiber.StatusUnauthorized)
+		return c.JSON(fiber.Map{
+			"message": "許可されたユーザーではありません",
+		})
+	}
+
+	return c.Next()
+}
+
 func GetUserId(c *fiber.Ctx) (uint, error) {
 	cookie := c.Cookies("SID_MCB")
 
@@ -113,8 +141,6 @@ func GetUserId(c *fiber.Ctx) (uint, error) {
 	payload := token.Claims.(*ClaimsWithScope)
 
 	id, _ := strconv.Atoi(payload.Subject)
-
-	fmt.Println(id)
 
 	return uint(id), nil
 }

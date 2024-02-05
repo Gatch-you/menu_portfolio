@@ -103,3 +103,128 @@ func Login(c *fiber.Ctx) error {
 		"message": "success",
 	})
 }
+
+func Logout(c *fiber.Ctx) error {
+	cookie := fiber.Cookie{
+		Name:     "SID_MCB",
+		Value:    "",
+		Expires:  time.Now().Add(-time.Hour),
+		HTTPOnly: true,
+	}
+
+	c.Cookie(&cookie)
+
+	return c.JSON(fiber.Map{
+		"message": "Success",
+	})
+}
+
+func UpdateInfo(c *fiber.Ctx) error {
+	var user_data map[string]string
+	if err := c.BodyParser(&user_data); err != nil {
+		return err
+	}
+
+	id, _ := middlewares.GetUserId(c)
+
+	user := models.User{
+		FirstName: user_data["first_name"],
+		LastName:  user_data["last_name"],
+		Email:     user_data["email"],
+	}
+	user.Id = id
+
+	database.DB.Model(&user).Updates(&user)
+
+	return c.JSON(user)
+}
+
+// ログインをしている状態におけるパスワードの変更機能
+func UpdatePassword(c *fiber.Ctx) error {
+	var update_data map[string]string
+
+	if err := c.BodyParser(&update_data); err != nil {
+		return err
+	}
+
+	if update_data["password"] != update_data["password_confirm"] {
+		c.Status(400)
+		return c.JSON(fiber.Map{
+			"message": "passwords do not match",
+		})
+	}
+
+	id, _ := middlewares.GetUserId(c)
+
+	user := models.User{}
+	user.Id = id
+
+	user.SetPassword(update_data["password"])
+
+	database.DB.Model(&user).Updates(&user)
+
+	fmt.Printf("Changing password is successed!")
+	return c.JSON(user)
+}
+
+func PasswordResetRequest(c *fiber.Ctx) error {
+	var user_request_data map[string]string
+
+	if err := c.BodyParser(&user_request_data); err != nil {
+		return err
+	}
+
+	email := user_request_data["email"]
+
+	var user models.User
+
+	database.DB.Where("email = ?", email).First(&user)
+
+	if user.Id == 0 {
+		return c.JSON(fiber.Map{
+			"message": "指定のユーザーアカウントが見つかりません",
+		})
+	}
+
+	tmpToken, _ := middlewares.GenerateJWT(user.Id, "user")
+
+	cookie := fiber.Cookie{
+		Name:     "SID_MCB_TMP",
+		Value:    tmpToken,
+		Expires:  time.Now().Add(time.Minute * 30),
+		HTTPOnly: true,
+	}
+
+	c.Cookie(&cookie)
+
+	return c.JSON(fiber.Map{
+		"message": "success",
+	})
+}
+
+func ResetPassword(c *fiber.Ctx) error {
+	var update_data map[string]string
+
+	if err := c.BodyParser(&update_data); err != nil {
+		return err
+	}
+
+	if update_data["password"] != update_data["password_confirm"] {
+		c.Status(400)
+		return c.JSON(fiber.Map{
+			"message": "passwords do not match",
+		})
+	}
+
+	id, _ := middlewares.GetUserId(c)
+
+	user := models.User{}
+	user.Id = id
+
+	user.SetPassword(update_data["password"])
+
+	database.DB.Model(&user).Updates(&user)
+
+	fmt.Printf("Changing password is successed!")
+	return c.JSON(user)
+}

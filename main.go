@@ -29,10 +29,6 @@ func main() {
 
 	// //controllersのリクエスト処理
 	// http.HandleFunc("/backend/test", connection_test)
-	// http.HandleFunc("/backend/foods", controllers.FetchFoods)
-	// http.HandleFunc("/backend/insert_food", controllers.InsertFoods)
-	// http.HandleFunc("/backend/delete_food", controllers.DeleteFoods)
-	// http.HandleFunc("/backend/update_food", controllers.UpdateFoods)
 	// http.HandleFunc("/backend/search_name", controllers.SearchFoodsName)
 
 	// //controllersのリクエスト

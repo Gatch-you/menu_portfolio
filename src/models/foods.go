@@ -9,7 +9,7 @@ type Food struct {
 	UnitId         uint      `json:"unit_id"`
 	FoodUnit       FoodUnit  `gorm:"foreignKey:UnitId"`
 	ExpirationDate time.Time `json:"expiration_date"`
-	TypeId         uint      `json:"type"`
+	TypeId         uint      `json:"type_id"`
 	FoodType       FoodType  `gorm:"foreignKey:TypeId"`
 	UserId         uint      `json:"user_id"`
 	User           User      `gorm:"foreignKey:UserId"`
