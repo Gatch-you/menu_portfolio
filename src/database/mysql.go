@@ -1,4 +1,4 @@
-package db
+package database
 
 import (
 	"backend/src/models"
