@@ -11,6 +11,27 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+func User(c *fiber.Ctx) error {
+	id, err := middlewares.GetUserId(c)
+
+	if err != nil {
+		return c.JSON(fiber.Map{
+			"message": "cookie is not match in your profile!",
+		})
+	}
+
+	var user models.User
+
+	database.DB.Where("id = ?", id).First(&user)
+
+	if strings.Contains(c.Path(), "/api/user") {
+		user := models.User(user)
+		return c.JSON(user)
+	}
+
+	return c.JSON(user)
+}
+
 func Resister(c *fiber.Ctx) error {
 	var regist_data map[string]string
 

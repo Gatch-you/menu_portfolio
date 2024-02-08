@@ -70,14 +70,15 @@ func UpdateFood(c *fiber.Ctx) error {
 }
 
 func SoftDeleteFood(c *fiber.Ctx) error {
+	foodId := c.Params("id")
+	fmt.Println(foodId)
+	userId, _ := middlewares.GetUserId(c)
+
 	var food models.Food
 
 	if err := c.BodyParser(&food); err != nil {
 		return err
 	}
-
-	userId, _ := middlewares.GetUserId(c)
-	foodId := food.Id
 
 	if err := database.DB.Where("id = ? AND user_id = ?", foodId, userId).First(&food).Error; err != nil {
 		c.Status(fiber.StatusNotFound)
