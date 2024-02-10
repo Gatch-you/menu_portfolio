@@ -6,6 +6,7 @@ import (
 	"backend/src/models"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -52,35 +53,78 @@ func UpdateRecipe(c *fiber.Ctx) error {
 }
 
 func DeleteRecipe(c *fiber.Ctx) error {
+	recipeId := c.Params("id")
+
 	var recipe models.Recipe
 
-	if err := c.BodyParser(&recipe); err != nil {
-		return err
-	}
-
-	database.DB.Delete(&recipe)
+	database.DB.Where("id = ?", recipeId).Delete(&recipe)
 
 	return c.JSON(fiber.Map{
 		"message": "Success",
 	})
 }
 
+// func FetchRecipeWithFoods(c *fiber.Ctx) error {
+// 	recipeId := c.Params("id")
+
+//		// userId, _ := middlewares.GetUserId(c)
+//		var recipe models.Recipe
+//		fmt.Println(recipeId)
+//		// fmt.Println(userId)
+//		if err := database.DB.Preload("Foods").Preload("Foods.FoodUnit").Where("id = ? ", recipeId).First(&recipe).Error; err != nil {
+//			c.Status(fiber.StatusNotFound)
+//			return c.JSON(fiber.Map{
+//				"message": "レシピが見つかりません",
+//			})
+//		}
+//		return c.JSON(recipe)
+//	}
 func FetchRecipeWithFoods(c *fiber.Ctx) error {
-	recipeId := c.Params("id")
-
-	// userId, _ := middlewares.GetUserId(c)
-
-	var recipe models.Recipe
-	fmt.Println(recipeId)
-	// fmt.Println(userId)
-	if err := database.DB.Preload("Foods").Preload("Foods.FoodUnit").Where("id = ? ", recipeId).First(&recipe).Error; err != nil {
-		c.Status(fiber.StatusNotFound)
-		return c.JSON(fiber.Map{
-			"message": "レシピが見つかりません",
-		})
+	type FoodResponse struct {
+		ID             uint      `json:"id"`
+		Name           string    `json:"name"`
+		Quantity       float64   `json:"quantity"`
+		UnitId         uint      `json:"unit_id"`
+		Unit           string    `json:"unit"`
+		ExpirationDate time.Time `json:"expiration_date"`
+		TypeId         uint      `json:"type_id"`
+		Type           string    `json:"type"`
+		UseAmount      float64   `json:"use_amount"`
+		UserId         uint      `json:"user_id"`
+	}
+	type RecipeResponse struct {
+		ID           uint           `json:"id"`
+		Name         string         `json:"name"`
+		Description  string         `json:"description"`
+		MakingMethod string         `json:"making_method"`
+		UserId       uint           `json:"user_id"`
+		Foods        []FoodResponse `json:"foods"`
 	}
 
-	return c.JSON(recipe)
+	recipeId := c.Params("id")
+	fmt.Println(recipeId)
+
+	var recipeResponse RecipeResponse
+
+	if err := database.DB.Model(&models.Recipe{}).Where("id = ?", recipeId).First(&recipeResponse).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"message": "レシピが見つかりません"})
+	}
+
+	fmt.Println(recipeResponse)
+
+	var foodResponse []FoodResponse
+
+	if err := database.DB.Table("foods").
+		Select("foods.*, recipe_food_relations.use_amount, food_units.unit").
+		Joins("join recipe_food_relations on recipe_food_relations.food_id = foods.id").
+		Joins("join food_units on food_units.id = foods.unit_id").
+		Where("recipe_food_relations.recipe_id = ?", recipeId).
+		Scan(&foodResponse).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "関連する食材の取得に失敗しました"})
+	}
+
+	recipeResponse.Foods = foodResponse
+	return c.JSON(recipeResponse)
 }
 
 type FoodToAdd struct {
@@ -105,7 +149,7 @@ func RegisterFoodToRecipe(c *fiber.Ctx) error {
 
 	relation := models.RecipeFoodRelation{
 		FoodId:    foodToAdd.FoodId,
-		RecipeId:  uint(recipeId), // recipeID を適切な型に変換する必要があるかもしれません
+		RecipeId:  uint(recipeId),
 		UseAmount: foodToAdd.UseAmount,
 	}
 
@@ -117,6 +161,52 @@ func RegisterFoodToRecipe(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{
 		"message": "success",
+	})
+}
+
+func DeleteFoodToRecipe(c *fiber.Ctx) error {
+	recipeId, err := strconv.ParseUint(c.Params("recipeId"), 10, 64)
+	if err != nil {
+		return c.JSON(fiber.Map{
+			"message": "URLエンドポイント(recipeId)のパラメータが正しくありません",
+		})
+	}
+
+	foodId, err := strconv.ParseUint(c.Params("foodId"), 10, 64)
+	if err != nil {
+		return c.JSON(fiber.Map{
+			"message": "URLエンドポイント(foodId)のパラメータが正しくありません",
+		})
+	}
+
+	var deleteFood models.RecipeFoodRelation
+
+	database.DB.Where("recipe_id = ? and food_id = ?", recipeId, foodId).Delete(&deleteFood)
+
+	return c.JSON(fiber.Map{
+		"message": "Success",
+	})
+}
+
+func UpdateFoodToRecipe(c *fiber.Ctx) error {
+	recipeId, err := strconv.ParseUint(c.Params("id"), 10, 64)
+	if err != nil {
+		return c.JSON(fiber.Map{
+			"message": "URLエンドポイントのパラメータが正しくありません",
+		})
+	}
+
+	var updateFood models.RecipeFoodRelation
+	if err := c.BodyParser(&updateFood); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Request body is not valid",
+		})
+	}
+
+	database.DB.Where("recipe_id = ? and food_id = ?", recipeId, updateFood.FoodId).Updates(&updateFood)
+
+	return c.JSON(fiber.Map{
+		"message": "Success",
 	})
 }
 
