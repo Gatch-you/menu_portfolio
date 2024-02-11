@@ -80,7 +80,9 @@ func SoftDeleteFood(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err := database.DB.Where("id = ? AND user_id = ?", foodId, userId).First(&food).Error; err != nil {
+	if err := database.DB.
+		Where("id = ? AND user_id = ?", foodId, userId).
+		First(&food).Error; err != nil {
 		c.Status(fiber.StatusNotFound)
 		return c.JSON(fiber.Map{
 			"message": "食材が見つかりません。",
@@ -110,29 +112,31 @@ func DeleteFood(c *fiber.Ctx) error {
 	})
 }
 
-// // curl http://localhost:8080/backend/foods/search_name%q=
-// func SearchFoodsName(w http.ResponseWriter, r *http.Request) {
-// 	query := r.URL.Query().Get("q")
+func FetchFoodswithExpiration(c *fiber.Ctx) error {
+	userId, _ := middlewares.GetUserId(c)
 
-// 	db := db.Connect()
-// 	defer db.Close()
+	var foodResponse []models.Food
 
-// 	rows, err := db.Query("SELECT name, quantity, unit, expiration_date FROM foods WHERE name LIKE ?", "%"+query+"%")
-// 	if err != nil {
-// 		log.Fatal(err.Error())
-// 	}
+	// まずは期限の切れる食材を取得
+	if err := database.DB.Model(&models.Food{}).
+		Where("user_id = ? AND expiration_date <= DATE_ADD(DATE(NOW()), INTERVAL 5 DAY)", userId).
+		Preload("FoodUnit").
+		Find(&foodResponse).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"message": "食材が見つかりません"})
+	}
 
-// 	foodArgs := make([]model.Food, 0)
-// 	for rows.Next() {
-// 		var food model.Food
-// 		err = rows.Scan(&food.Name, &food.Quantity, &food.Unit, &food.ExpirationDate)
-// 		if err != nil {
-// 			log.Fatal(err.Error())
-// 		}
-// 		foodArgs = append(foodArgs, food)
-// 	}
-
-// 	middleware.CorsMiddleware(http.DefaultServeMux)
-// 	json.NewEncoder(w).Encode(foodArgs)
-
-// }
+	// 事前に取得したfoodに対してrecipe_food_relationを参照し、関連するメニューを取得
+	for i, food := range foodResponse {
+		var recipes []models.Recipe
+		if err := database.DB.Table("recipes").
+			Select("recipes.*, recipe_food_relations.use_amount").
+			Joins("JOIN recipe_food_relations on recipe_food_relations.recipe_id = recipes.id").
+			Where("recipe_food_relations.food_id = ?", food.Id).
+			Scan(&recipes).Error; err != nil {
+			fmt.Println(err.Error())
+			continue
+		}
+		foodResponse[i].Recipes = recipes
+	}
+	return c.JSON(foodResponse)
+}

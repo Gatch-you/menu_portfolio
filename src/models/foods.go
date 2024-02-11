@@ -14,6 +14,7 @@ type Food struct {
 	UserId         uint      `json:"user_id" gorm:"index:idx_member, priority:1"`
 	User           User      `json:"-" gorm:"foreignKey:UserId"`
 	UseAmount      float64   `json:"use_amount" gorm:"-"`
+	Recipes        []Recipe  `json:"recipes" gorm:"many2many:recipe_food_relations;"`
 }
 
 type FoodUnit struct {

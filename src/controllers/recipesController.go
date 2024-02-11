@@ -64,21 +64,6 @@ func DeleteRecipe(c *fiber.Ctx) error {
 	})
 }
 
-// func FetchRecipeWithFoods(c *fiber.Ctx) error {
-// 	recipeId := c.Params("id")
-
-//		// userId, _ := middlewares.GetUserId(c)
-//		var recipe models.Recipe
-//		fmt.Println(recipeId)
-//		// fmt.Println(userId)
-//		if err := database.DB.Preload("Foods").Preload("Foods.FoodUnit").Where("id = ? ", recipeId).First(&recipe).Error; err != nil {
-//			c.Status(fiber.StatusNotFound)
-//			return c.JSON(fiber.Map{
-//				"message": "レシピが見つかりません",
-//			})
-//		}
-//		return c.JSON(recipe)
-//	}
 func FetchRecipeWithFoods(c *fiber.Ctx) error {
 	type FoodResponse struct {
 		ID             uint      `json:"id"`
@@ -210,10 +195,30 @@ func UpdateFoodToRecipe(c *fiber.Ctx) error {
 	})
 }
 
-// // レシピの構造体json形式のデータ変換等も行う
+func MakeDish(c *fiber.Ctx) error {
+	recipeId, err := strconv.ParseUint(c.Params("id"), 10, 64)
+	if err != nil {
+		return c.JSON(fiber.Map{
+			"message": "URLエンドポイントのパラメータが正しくありません",
+		})
+	}
 
-// // レシピの検索に使うが、他の検索アルゴリズムに置き換わる可能性大
-// func FetchRecipeByKey(w http.ResponseWriter, r *http.Request) {
-// 	db := db.Connect()
-// 	defer db.Close()
-// }
+	userId, _ := middlewares.GetUserId(c)
+
+	// トランザクションの実装
+	tx := database.DB.Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	if err := tx.Exec("UPDATE foods AS f INNER JOIN recipe_food_relations AS rf ON f.id = rf.food_id SET f.quantity = f.quantity - rf.use_amount WHERE rf.recipe_id = ? AND f.quantity >= rf.use_amount AND user_id = ?", recipeId, userId).Error; err != nil {
+		tx.Rollback()
+		return c.JSON(fiber.Map{"message": "食材の更新処理に失敗しました。"})
+	}
+
+	tx.Commit()
+
+	return c.JSON(fiber.Map{
+		"message": "Have a nice Cooking!!",
+	})
+}
