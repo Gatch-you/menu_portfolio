@@ -157,6 +157,7 @@ func UpdateInfo(c *fiber.Ctx) error {
 
 	database.DB.Model(&user).Updates(&user)
 
+	fmt.Println("update is succeed.")
 	return c.JSON(user)
 }
 

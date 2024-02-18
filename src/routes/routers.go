@@ -24,12 +24,16 @@ func Setup(app *fiber.App) {
 
 	userAuthenticated := user.Use(middlewares.IsAuthenticated)
 	userAuthenticated.Get("profile", controllers.User)
+	userAuthenticated.Put("profile", controllers.UpdateInfo)
+	userAuthenticated.Put("profile/password", controllers.UpdatePassword)
 	userAuthenticated.Post("logout", controllers.Logout)
+
 	userAuthenticated.Get("foods", controllers.FetchFoods)
 	userAuthenticated.Post("foods", controllers.CreateFood)
 	userAuthenticated.Put("foods", controllers.UpdateFood)
 	userAuthenticated.Put("foods/sfdelete/:id", controllers.SoftDeleteFood)
 	userAuthenticated.Delete("foods", controllers.DeleteFood)
+	userAuthenticated.Get("foods/select", controllers.AllFoods)
 
 	userAuthenticated.Get("recipes", controllers.FetchRecipes)
 	userAuthenticated.Post("recipes", controllers.CreateRecipe)

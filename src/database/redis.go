@@ -3,7 +3,6 @@ package database
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -23,8 +22,6 @@ func SetupCacheChannel() {
 	// チャネル
 	go func(ch chan string) {
 		for {
-			time.Sleep(5 * time.Second)
-
 			key := <-ch
 
 			Cache.Del(context.Background(), key)

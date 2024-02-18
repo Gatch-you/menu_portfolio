@@ -4,6 +4,8 @@ import (
 	database "backend/src/database"
 	"backend/src/middlewares"
 	"backend/src/models"
+	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
@@ -13,10 +15,28 @@ import (
 
 func FetchRecipes(c *fiber.Ctx) error {
 	var recipes []models.Recipe
+	var ctx = context.Background()
 
+	searchWord := c.Query("s")
 	userId, _ := middlewares.GetUserId(c)
 
-	database.DB.Where("user_id = ?", userId).Find(&recipes)
+	if searchWord == "" {
+		result, err := database.Cache.Get(ctx, "recipe_list_"+strconv.Itoa(int(userId))).Result()
+
+		if err != nil {
+			database.DB.Where("user_id = ?", userId).Find(&recipes)
+
+			bytes, _ := json.Marshal(recipes)
+
+			if errKey := database.Cache.Set(ctx, "recipe_list_"+strconv.Itoa(int(userId)), bytes, 30*time.Minute).Err(); errKey != nil {
+				database.DB.Where("user_id = ?", userId).Find(&recipes)
+			}
+		}
+
+		json.Unmarshal([]byte(result), &recipes)
+	} else {
+		database.DB.Where("user_id = ? AND name LIKE ?", userId, "%"+searchWord+"%").Find(&recipes)
+	}
 
 	return c.JSON(recipes)
 }
@@ -33,6 +53,8 @@ func CreateRecipe(c *fiber.Ctx) error {
 
 	database.DB.Create(&recipe)
 
+	go database.ClearCache("recipe_list_" + strconv.Itoa(int(userId)))
+
 	return c.JSON(recipe)
 }
 
@@ -48,16 +70,21 @@ func UpdateRecipe(c *fiber.Ctx) error {
 
 	database.DB.Model(&recipe).Updates(&recipe)
 
+	go database.ClearCache("recipe_list_" + strconv.Itoa(int(userId)))
+
 	return c.JSON(recipe)
 
 }
 
 func DeleteRecipe(c *fiber.Ctx) error {
 	recipeId := c.Params("id")
+	userId, _ := middlewares.GetUserId(c)
 
 	var recipe models.Recipe
 
 	database.DB.Where("id = ?", recipeId).Delete(&recipe)
+
+	go database.ClearCache("recipe_list_" + strconv.Itoa(int(userId)))
 
 	return c.JSON(fiber.Map{
 		"message": "Success",
@@ -221,4 +248,15 @@ func MakeDish(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"message": "Have a nice Cooking!!",
 	})
+}
+
+func SearchRecipes(c *fiber.Ctx) error {
+	var recipes []models.Recipe
+
+	searchWord := c.Query("s")
+	userId, _ := middlewares.GetUserId(c)
+
+	database.DB.Where("user_id = ? AND name LIKE ?", userId, "%"+searchWord+"%").Find(&recipes)
+
+	return nil
 }
