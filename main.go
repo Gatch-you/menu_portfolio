@@ -14,6 +14,7 @@ func main() {
 
 	database.Connect()
 	database.AutoMigrate()
+	// database.AutoCreateRecord()
 	database.SetRedis()
 	database.SetupCacheChannel()
 

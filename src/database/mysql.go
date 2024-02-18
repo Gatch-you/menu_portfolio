@@ -25,3 +25,19 @@ func Connect() {
 func AutoMigrate() {
 	DB.AutoMigrate(models.User{}, models.Food{}, models.FoodUnit{}, models.FoodType{}, models.Recipe{}, models.RecipeFoodRelation{})
 }
+
+func AutoCreateRecprd() {
+	units := []*models.FoodUnit{
+		{Unit: "個"}, {Unit: "本"}, {Unit: "匹"}, {Unit: "g"}, {Unit: "ml"},
+	}
+	DB.Create(&units)
+
+	types := []*models.FoodType{
+		{Type: "穀物"}, {Type: "肉"}, {Type: "魚"}, {Type: "野菜"}, {Type: "乳製品"}, {Type: "果物"}, {Type: "卵"},
+	}
+	DB.Create(&types)
+}
+
+// for _, user := range users {
+//   user.ID // 1,2,3
+// }

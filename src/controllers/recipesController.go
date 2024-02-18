@@ -80,9 +80,19 @@ func DeleteRecipe(c *fiber.Ctx) error {
 	recipeId := c.Params("id")
 	userId, _ := middlewares.GetUserId(c)
 
-	var recipe models.Recipe
+	tx := database.DB.Begin()
 
-	database.DB.Where("id = ?", recipeId).Delete(&recipe)
+	if err := tx.Where("recipe_id = ?", recipeId).Delete(&models.RecipeFoodRelation{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := tx.Where("id = ?", recipeId).Delete(&models.Recipe{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	tx.Commit()
 
 	go database.ClearCache("recipe_list_" + strconv.Itoa(int(userId)))
 
