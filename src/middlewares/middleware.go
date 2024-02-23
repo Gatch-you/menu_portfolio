@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -54,10 +55,19 @@ func GenerateJWT(id uint, scope string) (string, error) {
 }
 
 func IsAuthenticated(c *fiber.Ctx) error {
-	cookie := c.Cookies("SID_MCB")
+	authHeader := c.Get("Authorization")
+	if authHeader == "" {
+		return errors.New("authorization header is not Bearer token")
+	}
+
+	parts := strings.SplitN(authHeader, " ", 2)
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		return errors.New("authorization header is not Bearer token")
+	}
+	tokenString := parts[1]
 
 	// cookieからvalueを取得して配列を返す
-	token, err := jwt.ParseWithClaims(cookie, &ClaimsWithScope{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &ClaimsWithScope{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(SecretKey), nil
 	})
 
@@ -112,9 +122,18 @@ func IsTmpAuthenticated(c *fiber.Ctx) error {
 }
 
 func GetUserId(c *fiber.Ctx) (uint, error) {
-	cookie := c.Cookies("SID_MCB")
+	authHeader := c.Get("Authorization")
+	if authHeader == "" {
+		return 0, errors.New("authorization header is not Bearer token")
+	}
 
-	token, err := jwt.ParseWithClaims(cookie, &ClaimsWithScope{}, func(token *jwt.Token) (interface{}, error) {
+	parts := strings.SplitN(authHeader, " ", 2)
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		return 0, errors.New("authorization header is not Bearer token")
+	}
+	tokenString := parts[1]
+
+	token, err := jwt.ParseWithClaims(tokenString, &ClaimsWithScope{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte("secret"), nil
 	})
 

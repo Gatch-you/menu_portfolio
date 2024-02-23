@@ -4,7 +4,6 @@ import (
 	database "backend/src/database"
 	middlewares "backend/src/middlewares"
 	models "backend/src/models"
-	"fmt"
 	"strings"
 	"time"
 
@@ -15,18 +14,17 @@ func User(c *fiber.Ctx) error {
 	id, err := middlewares.GetUserId(c)
 
 	if err != nil {
-		return c.JSON(fiber.Map{
-			"message": "cookie is not match in your profile!",
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"message": "Unauthorized",
 		})
 	}
 
 	var user models.User
-
-	database.DB.Where("id = ?", id).First(&user)
-
-	if strings.Contains(c.Path(), "/api/user") {
-		user := models.User(user)
-		return c.JSON(user)
+	result := database.DB.First(&user, id)
+	if result.Error != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"message": "User not found",
+		})
 	}
 
 	return c.JSON(user)
@@ -36,7 +34,6 @@ func Resister(c *fiber.Ctx) error {
 	var regist_data map[string]string
 
 	if err := c.BodyParser(&regist_data); err != nil {
-		fmt.Println(err)
 		return err
 	}
 
@@ -73,7 +70,7 @@ func Login(c *fiber.Ctx) error {
 	database.DB.Where("email = ?", login_data["email"]).First(&user)
 
 	if user.Id == 0 {
-		c.Status(fiber.StatusBadRequest)
+		// c.Status(fiber.StatusBadRequest)
 		return c.JSON(fiber.Map{
 			"message": "ユーザーが見つかりません。\nメールアドレスを確認の上、ログインしてください。",
 		})
@@ -111,17 +108,9 @@ func Login(c *fiber.Ctx) error {
 		})
 	}
 
-	cookie := fiber.Cookie{
-		Name:     "SID_MCB",
-		Value:    token,
-		Expires:  time.Now().Add(time.Hour * 48),
-		HTTPOnly: true,
-	}
-
-	c.Cookie(&cookie)
-
 	return c.JSON(fiber.Map{
 		"message": "success",
+		"token":   token,
 	})
 }
 
@@ -157,7 +146,6 @@ func UpdateInfo(c *fiber.Ctx) error {
 
 	database.DB.Model(&user).Updates(&user)
 
-	fmt.Println("update is succeed.")
 	return c.JSON(user)
 }
 
@@ -185,7 +173,6 @@ func UpdatePassword(c *fiber.Ctx) error {
 
 	database.DB.Model(&user).Updates(&user)
 
-	fmt.Printf("Changing password is successed!")
 	return c.JSON(user)
 }
 
@@ -247,6 +234,5 @@ func ResetPassword(c *fiber.Ctx) error {
 
 	database.DB.Model(&user).Updates(&user)
 
-	fmt.Printf("Changing password is successed!")
 	return c.JSON(user)
 }

@@ -6,7 +6,6 @@ import (
 	"backend/src/models"
 	"context"
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -104,7 +103,6 @@ func UpdateFood(c *fiber.Ctx) error {
 
 func SoftDeleteFood(c *fiber.Ctx) error {
 	foodId := c.Params("id")
-	fmt.Println(foodId)
 	userId, _ := middlewares.GetUserId(c)
 
 	var food models.Food
@@ -121,8 +119,6 @@ func SoftDeleteFood(c *fiber.Ctx) error {
 			"message": "食材が見つかりません。",
 		})
 	}
-
-	fmt.Println(food)
 
 	database.DB.Model(&food).Updates(map[string]interface{}{
 		"quantity": 0.0,
@@ -152,7 +148,6 @@ func DeleteFood(c *fiber.Ctx) error {
 
 func FetchFoodswithExpiration(c *fiber.Ctx) error {
 	expirationDate := c.Query("expiration_date")
-	fmt.Println(expirationDate)
 	userId, _ := middlewares.GetUserId(c)
 
 	var foodResponse []models.Food
@@ -173,7 +168,6 @@ func FetchFoodswithExpiration(c *fiber.Ctx) error {
 			Joins("JOIN recipe_food_relations on recipe_food_relations.recipe_id = recipes.id").
 			Where("recipe_food_relations.food_id = ?", food.Id).
 			Scan(&recipes).Error; err != nil {
-			fmt.Println(err.Error())
 			continue
 		}
 		foodResponse[i].Recipes = recipes

@@ -6,7 +6,6 @@ import (
 	"backend/src/models"
 	"context"
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -124,15 +123,12 @@ func FetchRecipeWithFoods(c *fiber.Ctx) error {
 	}
 
 	recipeId := c.Params("id")
-	fmt.Println(recipeId)
 
 	var recipeResponse RecipeResponse
 
 	if err := database.DB.Model(&models.Recipe{}).Where("id = ?", recipeId).First(&recipeResponse).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"message": "レシピが見つかりません"})
 	}
-
-	fmt.Println(recipeResponse)
 
 	var foodResponse []FoodResponse
 
