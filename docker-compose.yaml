@@ -7,21 +7,7 @@ services:
     volumes:
       - .:/app
     depends_on:
-      - db
       - redis
-  
-  db:
-    image: mysql:latest
-    restart: always
-    environment:
-      MYSQL_DATABASE: mycooookbook
-      MYSQL_USER: user
-      MYSQL_PASSWORD: user_password
-      MYSQL_ROOT_PASSWORD: root_pass
-    volumes:
-      - .dbdata:/var/lib/mysql
-    ports:
-      - 33066:3306
 
   redis:
     image: redis:latest
